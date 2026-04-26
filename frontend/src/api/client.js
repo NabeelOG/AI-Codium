@@ -19,11 +19,12 @@ client.interceptors.request.use((config) => {
   return config
 })
 
-// Handle 401 globally — clear token and redirect to login
+// Handle 401 globally — clear token and redirect to login and redirect to login (skip auth endpoints themselves)
 client.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const url = error.config?.url || ''
+    if (error.response?.status === 401 && !url.includes('/auth/')) {
       localStorage.removeItem('auth_token')
       localStorage.removeItem('auth_user')
       window.location.href = '/login'
