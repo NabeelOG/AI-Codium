@@ -8,7 +8,7 @@ import { useAuth } from '../hooks/useAuth'
 
 export default function RegisterPage() {
   const { login } = useAuth()
-  const navigate  = useNavigate()
+  const navigate = useNavigate()
 
   const [serverError, setServerError] = useState('')
   const [role, setRole] = useState('student')

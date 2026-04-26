@@ -1,0 +1,505 @@
+{
+    "apidogProject": "1.0.0",
+    "$schema": {
+        "app": "apidog",
+        "type": "project",
+        "version": "1.2.0"
+    },
+    "info": {
+        "name": "Ai Codeium",
+        "description": "",
+        "mockRule": {
+            "rules": [],
+            "enableSystemRule": true
+        }
+    },
+    "projectSetting": {
+        "id": "1269365",
+        "auth": {},
+        "securityScheme": {},
+        "gateway": [],
+        "language": "en-US",
+        "apiStatuses": [
+            "developing",
+            "testing",
+            "released",
+            "deprecated"
+        ],
+        "mockSettings": {},
+        "preProcessors": [],
+        "postProcessors": [],
+        "advancedSettings": {
+            "enableJsonc": false,
+            "enableBigint": false,
+            "responseValidate": true,
+            "enableTestScenarioSetting": false,
+            "enableYAPICompatScript": false,
+            "isDefaultUrlEncoding": 3,
+            "publishedDocUrlRules": {
+                "defaultRule": "SLUGIFY_WITH_RESOURCE_KEY",
+                "resourceKeyStandard": "NEW"
+            }
+        },
+        "initialDisabledMockIds": [],
+        "servers": [
+            {
+                "id": "default",
+                "name": "Default Server",
+                "moduleId": 1227778
+            }
+        ],
+        "cloudMock": {
+            "security": "free",
+            "enable": false,
+            "tokenKey": "apidogToken"
+        }
+    },
+    "apiCollection": [
+        {
+            "name": "Root",
+            "id": 8126524,
+            "auth": {},
+            "securityScheme": {},
+            "parentId": 0,
+            "serverId": "",
+            "description": "",
+            "identityPattern": {
+                "httpApi": {
+                    "type": "methodAndPath",
+                    "bodyType": "",
+                    "fields": []
+                }
+            },
+            "shareSettings": {},
+            "visibility": "SHARED",
+            "moduleId": 1227778,
+            "preProcessors": [
+                {
+                    "id": "inheritProcessors",
+                    "type": "inheritProcessors",
+                    "data": {}
+                }
+            ],
+            "postProcessors": [
+                {
+                    "id": "inheritProcessors",
+                    "type": "inheritProcessors",
+                    "data": {}
+                }
+            ],
+            "inheritPostProcessors": {},
+            "inheritPreProcessors": {},
+            "items": [
+                {
+                    "name": "Registration",
+                    "api": {
+                        "id": "34174610",
+                        "method": "post",
+                        "path": "http://localhost:8080/auth/register",
+                        "parameters": {},
+                        "auth": {},
+                        "securityScheme": {},
+                        "commonParameters": {
+                            "query": [],
+                            "body": [],
+                            "cookie": [],
+                            "header": []
+                        },
+                        "responses": [
+                            {
+                                "id": "162803370",
+                                "code": "201",
+                                "name": "Success",
+                                "headers": [],
+                                "jsonSchema": {
+                                    "type": "object",
+                                    "properties": {}
+                                },
+                                "itemSchema": {},
+                                "description": "",
+                                "contentType": "json",
+                                "mediaType": ""
+                            }
+                        ],
+                        "responseExamples": [
+                            {
+                                "name": "Example 1",
+                                "data": "{\r\n    \"name\": \"Nabeel\",\r\n    \"email\": \"nmuhammed@gmail.com\",\r\n    \"password\": \"password\",\r\n    \"role\": \"student\"\r\n}",
+                                "responseId": "162803370"
+                            }
+                        ],
+                        "requestBody": {
+                            "type": "application/json",
+                            "parameters": [],
+                            "jsonSchema": {
+                                "type": "object",
+                                "properties": {}
+                            },
+                            "required": true,
+                            "mediaType": "",
+                            "examples": [
+                                {
+                                    "mediaType": "application/json",
+                                    "value": "{\r\n    \"name\": \"Nabeel\",\r\n    \"email\": \"nmuhammed@gmail.com\",\r\n    \"password\": \"password\",\r\n    \"role\": \"student\"\r\n}"
+                                }
+                            ],
+                            "oasExtensions": ""
+                        },
+                        "description": "",
+                        "tags": [],
+                        "status": "developing",
+                        "serverId": "",
+                        "operationId": "",
+                        "sourceUrl": "",
+                        "ordering": 10,
+                        "cases": [],
+                        "mocks": [],
+                        "customApiFields": "{}",
+                        "advancedSettings": {
+                            "disabledSystemHeaders": {}
+                        },
+                        "mockScript": {},
+                        "codeSamples": [],
+                        "commonResponseStatus": {},
+                        "responseChildren": [],
+                        "visibility": "INHERITED",
+                        "moduleId": 1227778,
+                        "oasExtensions": "",
+                        "type": "http",
+                        "preProcessors": [],
+                        "postProcessors": [],
+                        "inheritPostProcessors": {},
+                        "inheritPreProcessors": {}
+                    }
+                },
+                {
+                    "name": "Login",
+                    "api": {
+                        "id": "34200057",
+                        "method": "post",
+                        "path": "http://localhost:8080/auth/login",
+                        "parameters": {},
+                        "auth": {},
+                        "securityScheme": {},
+                        "commonParameters": {
+                            "query": [],
+                            "body": [],
+                            "cookie": [],
+                            "header": []
+                        },
+                        "responses": [
+                            {
+                                "id": "127858508",
+                                "code": 200,
+                                "name": "Success",
+                                "jsonSchema": {
+                                    "type": "object",
+                                    "properties": {}
+                                },
+                                "itemSchema": {},
+                                "contentType": "json"
+                            }
+                        ],
+                        "responseExamples": [
+                            {
+                                "name": "Internal Server Error",
+                                "data": "",
+                                "responseId": "127858508"
+                            }
+                        ],
+                        "requestBody": {
+                            "type": "application/json",
+                            "parameters": [],
+                            "jsonSchema": {
+                                "type": "object",
+                                "properties": {}
+                            },
+                            "required": true,
+                            "mediaType": "",
+                            "examples": [
+                                {
+                                    "mediaType": "application/json",
+                                    "value": "{\r\n    \"email\": \"nmuhammed@gmail.com\",\r\n    \"password\": \"password\"\r\n}"
+                                }
+                            ],
+                            "oasExtensions": ""
+                        },
+                        "description": "",
+                        "tags": [],
+                        "status": "developing",
+                        "serverId": "",
+                        "operationId": "",
+                        "sourceUrl": "",
+                        "ordering": 20,
+                        "cases": [],
+                        "mocks": [],
+                        "customApiFields": "{}",
+                        "advancedSettings": {
+                            "disabledSystemHeaders": {}
+                        },
+                        "mockScript": {},
+                        "codeSamples": [],
+                        "commonResponseStatus": {},
+                        "responseChildren": [],
+                        "visibility": "INHERITED",
+                        "moduleId": 1227778,
+                        "oasExtensions": "",
+                        "type": "http",
+                        "preProcessors": [],
+                        "postProcessors": [],
+                        "inheritPostProcessors": {},
+                        "inheritPreProcessors": {}
+                    }
+                }
+            ]
+        }
+    ],
+    "socketCollection": [],
+    "docCollection": [],
+    "webSocketCollection": [],
+    "socketIOCollection": [],
+    "mcpClientCollection": [],
+    "responseCollection": [
+        {
+            "_databaseId": 1494091,
+            "updatedAt": "2026-04-25T15:12:32.000Z",
+            "name": "Root",
+            "type": "root",
+            "children": [],
+            "moduleId": 1227778,
+            "parentId": 0,
+            "id": 1494091,
+            "ordering": [],
+            "items": []
+        }
+    ],
+    "schemaCollection": [
+        {
+            "id": 3344623,
+            "name": "Root",
+            "visibility": "SHARED",
+            "moduleId": 1227778,
+            "items": [],
+            "ordering": []
+        }
+    ],
+    "securitySchemeCollection": [
+        {
+            "id": 1298352,
+            "moduleId": 1227778,
+            "name": "Root",
+            "items": [],
+            "ordering": []
+        }
+    ],
+    "oasComponentCollection": [],
+    "requestCollection": [
+        {
+            "name": "Root",
+            "children": [],
+            "ordering": [
+                "requestFolder.10225676"
+            ],
+            "items": []
+        }
+    ],
+    "apiTestCaseCollection": [
+        {
+            "id": 0,
+            "name": "Root",
+            "children": [],
+            "items": []
+        }
+    ],
+    "testCaseReferences": [],
+    "environments": [],
+    "commonScripts": [],
+    "databaseConnections": [],
+    "globalVariables": [],
+    "commonParameters": null,
+    "customFunctions": [],
+    "projectTestCaseCategories": [
+        {
+            "id": 1271994,
+            "name": "Positive",
+            "description": "Valid inputs and correct expected results, representing typical usage."
+        },
+        {
+            "id": 1271995,
+            "name": "Negative",
+            "description": "Negative, invalid inputs such as missing fields, wrong types, unsupported methods, etc."
+        },
+        {
+            "id": 1271996,
+            "name": "Boundary",
+            "description": "Extreme or edge conditions, such as maximum string length, empty values, zero, null, etc."
+        },
+        {
+            "id": 1271997,
+            "name": "Security",
+            "description": "Test cases that may expose API security risks."
+        },
+        {
+            "id": 1271998,
+            "name": "Other",
+            "description": "Test cases not classified under existing categories."
+        }
+    ],
+    "projectTestCaseTags": [
+        {
+            "id": 5590563,
+            "name": "Required Fields Only",
+            "description": "Send only the required fields with valid values, omitting all optional fields, to test minimal valid requests."
+        },
+        {
+            "id": 5590564,
+            "name": "Valid Semantic",
+            "description": "Use values that are syntactically correct and also make sense in the business logic or domain context."
+        },
+        {
+            "id": 5590565,
+            "name": "Enum Combination Coverage",
+            "description": "For all enum-type parameters, apply orthogonal design to systematically construct test case combinations of parameters and their enum values, dedicated to testing enum coverage."
+        },
+        {
+            "id": 5590566,
+            "name": "Other Positive Case",
+            "description": "Provide realistic and valid inputs that match the API specification, producing the correct and expected result."
+        },
+        {
+            "id": 5590567,
+            "name": "Missing Required Fields",
+            "description": "Omit one or more required fields in the request body or parameters."
+        },
+        {
+            "id": 5590568,
+            "name": "Invalid Values",
+            "description": "Provide values that are within the correct type and format, but logically invalid for the field."
+        },
+        {
+            "id": 5590569,
+            "name": "Type Errors",
+            "description": "Use values with incorrect data types, such as sending a string instead of an integer."
+        },
+        {
+            "id": 5590570,
+            "name": "Format Errors",
+            "description": "Provide values in an incorrect format, e.g., wrong date pattern, malformed email address."
+        },
+        {
+            "id": 5590571,
+            "name": "Semantic Errors",
+            "description": "Use syntactically correct and properly formatted values that are logically impossible or violate domain rules."
+        },
+        {
+            "id": 5590572,
+            "name": "Other Negative Case",
+            "description": "Provide invalid or unexpected inputs that should trigger error handling or rejection by the API."
+        },
+        {
+            "id": 5590573,
+            "name": "Null",
+            "description": "Must be the JSON literal `null` (not empty, not \"null\")."
+        },
+        {
+            "id": 5590574,
+            "name": "Zero",
+            "description": "Must be the numeric literal 0."
+        },
+        {
+            "id": 5590575,
+            "name": "Empty Values",
+            "description": "Must be \"\"."
+        },
+        {
+            "id": 5590576,
+            "name": "Max Values",
+            "description": "Provide the exact minimum and maximum allowed values for numeric or date fields."
+        },
+        {
+            "id": 5590577,
+            "name": "Min Values",
+            "description": "Provide the exact minimum and maximum allowed values for numeric or date fields."
+        },
+        {
+            "id": 5590578,
+            "name": "Overflow",
+            "description": "Provide values just beyond the allowed minimum or maximum boundaries."
+        },
+        {
+            "id": 5590579,
+            "name": "Underflow",
+            "description": "Provide values just beyond the allowed minimum or maximum boundaries."
+        },
+        {
+            "id": 5590580,
+            "name": "Overly Long Strings",
+            "description": "Provide strings longer than the maximum allowed length, or shorter than the minimum required length."
+        },
+        {
+            "id": 5590581,
+            "name": "Overly Short Strings",
+            "description": "Provide strings longer than the maximum allowed length, or shorter than the minimum required length."
+        },
+        {
+            "id": 5590582,
+            "name": "Broken Object Level Authorization",
+            "description": "Users access or manipulate data objects without proper authorization."
+        },
+        {
+            "id": 5590583,
+            "name": "Access Control",
+            "description": "Restricting resources and actions users can access based on roles, permissions, or attributes."
+        },
+        {
+            "id": 5590584,
+            "name": "Auth Failures",
+            "description": "Authentication is weak, misconfigured, or bypassed, allowing unauthorized access."
+        },
+        {
+            "id": 5590585,
+            "name": "SQL Injection",
+            "description": "Insert malicious SQL code into input fields to test for SQL injection vulnerabilities."
+        },
+        {
+            "id": 5590586,
+            "name": "XSS Injection",
+            "description": "Inject JavaScript or HTML tags to test for cross-site scripting vulnerabilities."
+        },
+        {
+            "id": 5590587,
+            "name": "Fuzzy Input",
+            "description": "Send large or randomly generated payloads to test input validation and stability."
+        },
+        {
+            "id": 5590588,
+            "name": "Command Injection",
+            "description": "Insert shell commands into inputs to test for command execution vulnerabilities."
+        },
+        {
+            "id": 5590589,
+            "name": "JSON Injection",
+            "description": "Insert malicious or unexpected JSON structures to test parsing and validation."
+        },
+        {
+            "id": 5590590,
+            "name": "NoSQL Injection",
+            "description": "Provide NoSQL-specific malicious queries or operators to test for injection vulnerabilities."
+        },
+        {
+            "id": 5590591,
+            "name": "Other",
+            "description": "Test cases not classified under existing categories."
+        }
+    ],
+    "projectAssociations": [],
+    "moduleSettings": [
+        {
+            "id": "1227778",
+            "name": "Default module",
+            "description": "",
+            "moduleVariables": [],
+            "openApiInfo": {}
+        }
+    ]
+}
