@@ -6,7 +6,6 @@ import (
 	"aicodeium/middleware"
 	"os"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,12 +18,7 @@ func init() {
 func main() {
 	router := gin.Default()
 
-	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Authorization", "Content-Type"},
-		AllowCredentials: true,
-	}))
+	router.Use(initializers.SetupCORS())
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -38,6 +32,15 @@ func main() {
 		auth.POST("/login", controllers.Login)
 		auth.POST("/logout", controllers.Logout)
 		auth.GET("/me", middleware.RequireAuth(), controllers.Me)
+	}
+
+	api := router.Group("/")
+	api.Use(middleware.RequireAuth())
+	{
+		api.POST("/classrooms", controllers.CreateClassroom)
+		api.GET("/classrooms", controllers.GetClassrooms)
+		api.GET("/classrooms/:id", controllers.GetClassroomByID)
+		api.GET("/classrooms/code/:code", controllers.GetClassroomByCode)
 	}
 
 	port := os.Getenv("PORT")
