@@ -68,7 +68,7 @@ func CreateClassroom(c *gin.Context) {
 		"teacher_id":   classroom.TeacherID,
 		"teacher_name": classroom.TeacherName,
 		"invite_code":  classroom.InviteCode,
-		"archived":     classroom.InviteCode,
+		"archived":     classroom.Archived,
 		"created_at":   classroom.CreatedAt,
 	})
 }
@@ -88,7 +88,7 @@ func GetClassrooms(c *gin.Context) {
 		query = initializers.DB.
 			Table("classrooms").
 			Joins("JOIN enrollments ON enrollments.classroom_id = classrooms.id").
-			Where("enrollments.student_id = ? AND classroom.archived = ?", userID, false)
+			Where("enrollments.student_id = ? AND classrooms.archived = ?", userID, false)
 	} else {
 		c.JSON(http.StatusForbidden, gin.H{
 			"error": "Invalid role",

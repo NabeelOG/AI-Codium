@@ -9,12 +9,12 @@ import (
 
 type Classroom struct {
 	gorm.Model
-	Name        string `gorm:"not null"`
-	Description string
-	TeacherID   uint   `gorm:"not null;index"`
-	TeacherName string `gorm:"not null"`
-	InviteCode  string `gorm:"uniqueIndex;not null"`
-	Archived    bool   `gorm:"default:false"`
+	Name        string `gorm:"not null" json:"name"`
+	Description string `json:"description"`
+	TeacherID   uint   `gorm:"not null;index" json:"teacher_id"`
+	TeacherName string `gorm:"not null" json:"teacher_name"`
+	InviteCode  string `gorm:"uniqueIndex;not null" json:"invite_code"`
+	Archived    bool   `gorm:"default:false" json:"archived"`
 }
 
 func GenerateInviteCode() (string, error) {
