@@ -30,6 +30,10 @@ export default function RegisterPage() {
       navigate(result.user.role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard', { replace: true })
     } catch (err) {
       const msg = err.response?.data?.message || 'Registration failed. Please try again.'
+      if(err.response.data.error === 'Failed to create user, Email already taken') {
+        setServerError('Already account existing on this email')
+        return;
+      }
       setServerError(msg)
     }
   }

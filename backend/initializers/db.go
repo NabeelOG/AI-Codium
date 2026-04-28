@@ -27,5 +27,9 @@ func ConnectDB() {
 }
 
 func SyncDB() {
-	DB.AutoMigrate(&models.User{})
+	DB.AutoMigrate(
+		&models.User{},
+		&models.Classroom{},
+		&models.Enrollment{},
+	)
 }
