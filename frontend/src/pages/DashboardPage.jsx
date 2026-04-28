@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import { useAuth } from '../hooks/useAuth'
-import { classroomStore, enrollmentStore } from '../store/mockStore'
+import { getClassrooms, createClassroom } from '../api/classroom'
+import LoadingSpinner from '../components/LoadingSpinner'
 
 function CreateClassroomModal({ onClose, onCreate }) {
   const [name, setName] = useState('')
@@ -71,20 +72,31 @@ export default function DashboardPage() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [showModal, setShowModal] = useState(false)
-  const [classrooms, setClassrooms] = useState(() => classroomStore.forTeacher(user?.id))
+  const [classrooms, setClassrooms] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    getClassrooms()
+      .then(setClassrooms)
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
 
   const filtered = classrooms.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase())
   )
 
-  const totalStudents = classrooms.reduce((sum, c) => sum + enrollmentStore.forClassroom(c.id).length, 0)
   const activeCount = classrooms.filter(c => !c.archived).length
 
-  const handleCreate = ({ name, description }) => {
-    const newRoom = classroomStore.create({ name, description, teacherId: user.id, teacherName: user.name })
-    setClassrooms(classroomStore.forTeacher(user.id))
-    setShowModal(false)
-    navigate(`/teacher/classroom/${newRoom.id}`)
+  const handleCreate = async ({ name, description }) => {
+    try {
+      const newRoom = await createClassroom({ name, description })
+      setClassrooms(prev => [...prev, newRoom])
+      setShowModal(false)
+      navigate(`/teacher/classroom/${newRoom.id}`)
+    } catch {
+      /* creation failed */
+    }
   }
 
   return (
@@ -122,7 +134,6 @@ export default function DashboardPage() {
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
           {[
-            { label: 'Total Students', value: totalStudents },
             { label: 'Active Classrooms', value: activeCount },
             { label: 'Total Classrooms', value: classrooms.length },
           ].map(({ label, value }) => (
@@ -144,7 +155,11 @@ export default function DashboardPage() {
             <span style={{ fontSize: '0.8125rem', color: 'var(--color-on-surface-variant)' }}>{classrooms.length} total</span>
           </div>
 
-          {filtered.length === 0 ? (
+          {loading ? (
+            <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-on-surface-variant)' }}>
+              <LoadingSpinner size={24} />
+            </div>
+          ) : filtered.length === 0 ? (
             <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-on-surface-variant)' }}>
               {classrooms.length === 0 ? (
                 <div>
