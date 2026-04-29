@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import { useAuth } from '../hooks/useAuth'
@@ -93,7 +93,6 @@ export default function DashboardPage() {
       const newRoom = await createClassroom({ name, description })
       setClassrooms(prev => [...prev, newRoom])
       setShowModal(false)
-      navigate(`/teacher/classroom/${newRoom.id}`)
     } catch {
       /* creation failed */
     }
@@ -175,7 +174,7 @@ export default function DashboardPage() {
           ) : (
             filtered.map((cls, idx) => (
               <ClassroomRow
-                key={cls.id}
+                key={cls.ID}
                 cls={cls}
                 isLast={idx === filtered.length - 1}
                 onEnter={() => navigate(`/teacher/classroom/${cls.id}`)}
@@ -195,14 +194,13 @@ export default function DashboardPage() {
 
 function ClassroomRow({ cls, isLast, onEnter, onRefresh }) {
   const [copied, setCopied] = useState(false)
-  const studentCount = enrollmentStore.forClassroom(cls.id).length
 
-  const copyLink = () => {
-    const url = `${window.location.origin}/join/${cls.inviteCode}`
+  const copyLink = useCallback(() => {
+    const url = `${window.location.origin}/join/${cls.invite_code}`
     navigator.clipboard.writeText(url).catch(() => {})
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
-  }
+  }, [cls.invite_code])
 
   return (
     <div style={{
@@ -226,7 +224,7 @@ function ClassroomRow({ cls, isLast, onEnter, onRefresh }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexShrink: 0 }}>
+      {/* <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexShrink: 0 }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontFamily: 'var(--font-grotesk)', fontSize: '0.625rem', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--color-on-surface-variant)', marginBottom: '0.25rem' }}>Students</div>
           <div style={{ fontWeight: 700, fontSize: '1.0625rem', color: 'var(--color-on-surface)' }}>{studentCount}</div>
@@ -239,7 +237,7 @@ function ClassroomRow({ cls, isLast, onEnter, onRefresh }) {
           <div style={{ fontFamily: 'var(--font-grotesk)', fontSize: '0.625rem', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--color-on-surface-variant)', marginBottom: '0.25rem' }}>Code</div>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-primary-container)', letterSpacing: '0.1em' }}>{cls.inviteCode}</div>
         </div>
-      </div>
+      </div> */}
 
       <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
         {!cls.archived ? (

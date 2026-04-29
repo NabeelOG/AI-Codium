@@ -11,7 +11,7 @@ import (
 
 func CreateClassroom(c *gin.Context) {
 	// Get teacher info from JWT middleware
-	teacherId := c.GetUint("userId")
+	teacherId := c.GetUint("userID")
 	// teacherEmail := c.GetString("email")
 	teacherRole := c.GetString("role")
 
