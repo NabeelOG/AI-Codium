@@ -1,30 +1,64 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
-import { classroomStore, questionStore, enrollmentStore } from '../store/mockStore'
 import { useAuth } from '../hooks/useAuth'
+import { getClassroom } from '../api/classroom'
+import { getClassroomQuestions } from '../api/question'
+import { getClassroomStudents } from '../api/enrollment'
 
 export default function ClassroomManagePage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState('questions')
+  const [classroom, setClassroom] = useState(null)
+  const [questions, setQuestions] = useState([])
+  const [students, setStudents] = useState([])
+  const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
 
-  const classroom = classroomStore.byId(id)
-  const questions = questionStore.forClassroom(id)
-  const students = enrollmentStore.forClassroom(id)
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const classroomData = await getClassroom(id)
+        // const questionsData = await getClassroomQuestions(id)
+        // const studentsData = await getClassroomStudents(id)
+        
+        setClassroom(classroomData)
+        // setQuestions(questionsData)
+        // setStudents(studentsData)
+      } catch (error) {
+        console.error('Failed to load classroom:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchData()
+  }, [id])
 
   const copyLink = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/join/${classroom?.inviteCode}`).catch(() => {})
+    navigator.clipboard.writeText(`${window.location.origin}/join/${classroom?.invite_code}`).catch(() => {})
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
   const handleDeleteQuestion = (qid) => {
     if (!confirm('Delete this question and all submissions?')) return
-    questionStore.delete(qid)
+    // TODO: Implement delete API call
+    // questionStore.delete(qid)
     navigate(0) // refresh
+  }
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-surface)' }}>
+        <Sidebar />
+        <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div>Loading...</div>
+        </main>
+      </div>
+    )
   }
 
   if (!classroom) {
@@ -49,7 +83,6 @@ export default function ClassroomManagePage() {
       <Sidebar />
 
       <main style={{ flex: 1, overflowY: 'auto', padding: '2rem 2rem 3rem' }}>
-        {/* Breadcrumb */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', fontSize: '0.875rem', color: 'var(--color-on-surface-variant)' }}>
           <button className="btn btn-ghost" style={{ padding: '0.125rem 0', fontSize: '0.875rem' }} onClick={() => navigate('/teacher/dashboard')}>
             Classrooms
@@ -58,7 +91,6 @@ export default function ClassroomManagePage() {
           <span style={{ color: 'var(--color-on-surface)', fontWeight: 600 }}>{classroom.name}</span>
         </div>
 
-        {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-on-surface)', margin: '0 0 0.25rem' }}>
@@ -74,7 +106,7 @@ export default function ClassroomManagePage() {
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.875rem', background: 'var(--color-surface-lowest)', border: '1px solid var(--color-outline-variant)', borderRadius: 'var(--radius-DEFAULT)', fontSize: '0.875rem' }}>
               <span style={{ color: 'var(--color-on-surface-variant)' }}>Invite Code:</span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-primary-container)', letterSpacing: '0.1em' }}>{classroom.inviteCode}</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-primary-container)', letterSpacing: '0.1em' }}>{classroom.invite_code}</span>
             </div>
             <button className="btn btn-secondary" onClick={copyLink} style={{ fontSize: '0.875rem' }}>
               {copied ? '✓ Copied!' : '🔗 Copy Invite Link'}
@@ -85,7 +117,6 @@ export default function ClassroomManagePage() {
           </div>
         </div>
 
-        {/* Stats bar */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           {[
             { label: 'Students', value: students.length },
@@ -99,7 +130,6 @@ export default function ClassroomManagePage() {
           ))}
         </div>
 
-        {/* Tabs */}
         <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--color-outline-variant)', marginBottom: '1.5rem' }}>
           {['questions', 'students'].map(tab => (
             <button
@@ -120,7 +150,6 @@ export default function ClassroomManagePage() {
           ))}
         </div>
 
-        {/* Questions tab */}
         {activeTab === 'questions' && (
           <div>
             {questions.length === 0 ? (
@@ -149,7 +178,6 @@ export default function ClassroomManagePage() {
           </div>
         )}
 
-        {/* Students tab */}
         {activeTab === 'students' && (
           <div>
             {students.length === 0 ? (
@@ -161,18 +189,18 @@ export default function ClassroomManagePage() {
             ) : (
               <div className="card" style={{ overflow: 'hidden' }}>
                 {students.map((s, idx) => (
-                  <div key={s.studentId} style={{
+                  <div key={s.studentId || s.id} style={{
                     display: 'flex', alignItems: 'center', gap: '0.875rem',
                     padding: '0.875rem 1.25rem',
                     borderBottom: idx === students.length - 1 ? 'none' : '1px solid var(--color-outline-variant)',
                   }}>
                     <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--color-primary-container)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                      {s.studentName[0]?.toUpperCase()}
+                      {(s.studentName || s.name)[0]?.toUpperCase()}
                     </div>
                     <div>
-                      <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--color-on-surface)' }}>{s.studentName}</div>
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--color-on-surface)' }}>{s.studentName || s.name}</div>
                       <div style={{ fontSize: '0.8125rem', color: 'var(--color-on-surface-variant)' }}>
-                        Joined {new Date(s.joinedAt).toLocaleDateString()}
+                        Joined {new Date(s.createdAt || s.joinedAt).toLocaleDateString()}
                       </div>
                     </div>
                   </div>
