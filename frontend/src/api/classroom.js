@@ -31,21 +31,21 @@ export async function runCode({ code, language, testCases }) {
 }
 
 export async function getStudentClassrooms() {
-    try {
-        const { data } = await client.get('/classrooms')
-        return data // This already returns only enrolled classrooms for students
-    } catch (error) {
-        console.error('Failed to fetch student classrooms:', error)
-        return []
-    }
+  try {
+    const { data } = await client.get('/classrooms')
+    return data // This already returns only enrolled classrooms for students
+  } catch (error) {
+    console.error('Failed to fetch student classrooms:', error)
+    return []
+  }
 }
 
 export async function joinClassroom(inviteCode) {
-    try {
-        const { data } = await client.post(`/join/${inviteCode}`)
-        return data
-    } catch (error) {
-        console.error('Failed to join classroom:', error)
-        throw error
-    }
+  try {
+    const { data } = await client.post(`/join/${inviteCode}`)
+    return data
+  } catch (error) {
+    console.error('Failed to join classroom:', error)
+    throw error
+  }
 }
