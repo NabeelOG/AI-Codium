@@ -174,11 +174,11 @@ export default function DashboardPage() {
           ) : (
             filtered.map((cls, idx) => (
               <ClassroomRow
-                key={cls.ID}
+                key={cls.id}
                 cls={cls}
                 isLast={idx === filtered.length - 1}
-                onEnter={() => navigate(`/teacher/classroom/${cls.ID}`)}
-                onRefresh={() => setClassrooms(classroomStore.forTeacher(user.ID))}
+                onEnter={() => navigate(`/teacher/classroom/${cls.id}`)}
+                onRefresh={() => setClassrooms(classroomStore.forTeacher(user.id))}
               />
             ))
           )}

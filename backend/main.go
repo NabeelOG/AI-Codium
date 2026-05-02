@@ -37,10 +37,18 @@ func main() {
 	api := router.Group("/")
 	api.Use(middleware.RequireAuth())
 	{
+		// Classrooms
 		api.POST("/classrooms", controllers.CreateClassroom)
 		api.GET("/classrooms", controllers.GetClassrooms)
 		api.GET("/classrooms/:id", controllers.GetClassroomByID)
 		api.GET("/classrooms/code/:code", controllers.GetClassroomByCode)
+
+		// Enrollments
+
+		// Questions
+		api.POST("/classrooms/:id/questions", controllers.CreateQuestion)
+		// Submissions
+
 	}
 
 	port := os.Getenv("PORT")

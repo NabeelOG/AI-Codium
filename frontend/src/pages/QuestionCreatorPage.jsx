@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import Editor from '@monaco-editor/react'
 import Sidebar from '../components/Sidebar'
 import LoadingSpinner from '../components/LoadingSpinner'
-import { questionStore, classroomStore } from '../store/mockStore'
+import { getClassroom } from '../api/classroom'
+import { getClassroomQuestions, createQuestion, getQuestion, updateQuestion } from '../api/question'
 
 const LANGUAGES = ['javascript', 'python', 'java', 'cpp', 'typescript']
 
@@ -12,7 +13,8 @@ export default function QuestionCreatorPage() {
   const navigate = useNavigate()
   const isEdit = Boolean(qid)
 
-  const classroom = classroomStore.byId(classroomId)
+  const [classroom, setClassrooms] = useState(null)
+  const [loading, setLoading] = useState(true)
   const existing = isEdit ? questionStore.byId(qid) : null
 
   const [title, setTitle] = useState(existing?.title || '')
@@ -23,6 +25,30 @@ export default function QuestionCreatorPage() {
   const [templateCode, setTemplateCode] = useState(existing?.templateCode || '')
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const classroomData = await getClassroom(classroomId)
+        setClassrooms(classroomData)
+
+        if (isEdit) {
+          const questionData = await getQuestion(qid)
+          setTitle(questionData.title || '')
+          setDescription(questionData.description || '')
+          setDifficulty(questionData.difficulty || '')
+          setLanguage(questionData.language || '')
+          setConstraints(questionData.constraints?.join('\n') || '')
+          setTemplateCode(questionData.template_code)
+        }
+      } catch (error) {
+        console.error('Failed to load:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [classroomId, qid, isEdit])
 
   const validate = () => {
     const e = {}
@@ -35,25 +61,28 @@ export default function QuestionCreatorPage() {
   const handleSave = async () => {
     if (!validate()) return
     setSaving(true)
-    await new Promise(r => setTimeout(r, 300))
 
     const payload = {
-      classroomId,
       title: title.trim(),
       description: description.trim(),
       difficulty,
       language,
       constraints: constraints.split('\n').map(s => s.trim()).filter(Boolean),
-      templateCode,
+      template_code: templateCode,
     }
 
-    if (isEdit) {
-      questionStore.update(qid, payload)
-    } else {
-      questionStore.create(payload)
+    try{
+      if (isEdit) {
+        await updateQuestion(qid, payload)
+      } else {
+        await createQuestion(classroomId, payload)
+      }
+      navigate(`/teacher/classroom/${classroomId}`)
+    } catch (error) {
+      console.error('Failed to save', error)
+    } finally {
+      setSaving(false)
     }
-    setSaving(false)
-    navigate(`/teacher/classroom/${classroomId}`)
   }
 
   return (

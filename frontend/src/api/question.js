@@ -9,3 +9,23 @@ export async function getClassroomQuestions(classroomId) {
         return []
     }
 }
+
+export async function createQuestion(classroomId, payload) {
+    const {data} = await client.post(`/classrooms/${classroomId}/questions`, payload)
+    return data;
+}
+
+export async function updateQuestion(questionId, payload) {
+    const {data} = await client.put(`/questions/${questionId}`, payload)
+    return data;
+}
+
+export async function deleteQuestion(questionId) {
+    const {data} = await client.delete(`/questions/${questionId}`, payload)
+    return data;
+}
+
+export async function getQuestion(questionId) {
+  const { data } = await client.get(`/questions/${questionId}`)
+  return data
+}
