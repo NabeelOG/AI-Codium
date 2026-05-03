@@ -1,45 +1,44 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import Editor from '@monaco-editor/react'
 import Sidebar from '../components/Sidebar'
 import LoadingSpinner from '../components/LoadingSpinner'
-import { getClassroom } from '../api/classroom'
 import { getClassroomQuestions, createQuestion, getQuestion, updateQuestion } from '../api/question'
+import { getClassroom } from '../api/classroom'
 
 const LANGUAGES = ['javascript', 'python', 'java', 'cpp', 'typescript']
 
 export default function QuestionCreatorPage() {
   const { id: classroomId, qid } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const isEdit = Boolean(qid)
-
-  const [classroom, setClassrooms] = useState(null)
+  const passedQuestion = location.state?.question
   const [loading, setLoading] = useState(true)
-  const existing = isEdit ? questionStore.byId(qid) : null
-
-  const [title, setTitle] = useState(existing?.title || '')
-  const [description, setDescription] = useState(existing?.description || '')
-  const [difficulty, setDifficulty] = useState(existing?.difficulty || 'medium')
-  const [language, setLanguage] = useState(existing?.language || 'javascript')
-  const [constraints, setConstraints] = useState(existing?.constraints?.join('\n') || '')
-  const [templateCode, setTemplateCode] = useState(existing?.templateCode || '')
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [difficulty, setDifficulty] = useState('medium')
+  const [language, setLanguage] = useState('javascript')
+  const [constraints, setConstraints] = useState('')
+  const [templateCode, setTemplateCode] = useState('')
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+  const [classroom, setClassroom] = useState(null)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const classroomData = await getClassroom(classroomId)
-        setClassrooms(classroomData)
 
-        if (isEdit) {
-          const questionData = await getQuestion(qid)
-          setTitle(questionData.title || '')
-          setDescription(questionData.description || '')
-          setDifficulty(questionData.difficulty || '')
-          setLanguage(questionData.language || '')
-          setConstraints(questionData.constraints?.join('\n') || '')
-          setTemplateCode(questionData.template_code)
+        const classroomData = await getClassroom(classroomId)
+        setClassroom(classroomData)
+
+        if (isEdit && passedQuestion) {
+          setTitle(passedQuestion.title || '')
+          setDescription(passedQuestion.description || '')
+          setDifficulty(passedQuestion.difficulty || '')
+          setLanguage(passedQuestion.language || '')
+          setConstraints(passedQuestion.constraints?.join('\n') || '')
+          setTemplateCode(passedQuestion.template_code)
         }
       } catch (error) {
         console.error('Failed to load:', error)

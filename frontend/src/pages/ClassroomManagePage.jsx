@@ -21,11 +21,11 @@ export default function ClassroomManagePage() {
     const fetchData = async () => {
       try {
         const classroomData = await getClassroom(id)
-        // const questionsData = await getClassroomQuestions(id)
+        const questionsData = await getClassroomQuestions(id)
         // const studentsData = await getClassroomStudents(id)
         
         setClassroom(classroomData)
-        // setQuestions(questionsData)
+        setQuestions(questionsData)
         // setStudents(studentsData)
       } catch (error) {
         console.error('Failed to load classroom:', error)
@@ -165,12 +165,14 @@ export default function ClassroomManagePage() {
               <div className="card" style={{ overflow: 'hidden' }}>
                 {questions.map((q, idx) => (
                   <QuestionRow
-                    key={q.id}
+                    key={q.ID}
                     question={q}
                     isLast={idx === questions.length - 1}
-                    onAnalytics={() => navigate(`/teacher/classroom/${id}/question/${q.id}/analytics`)}
-                    onEdit={() => navigate(`/teacher/classroom/${id}/question/${q.id}/edit`)}
-                    onDelete={() => handleDeleteQuestion(q.id)}
+                    onAnalytics={() => navigate(`/teacher/classroom/${id}/question/${q.ID}/analytics`)}
+                    onEdit={() => navigate(`/teacher/classroom/${id}/question/${q.ID}/edit`, {
+                      state: { question: q }
+                    })}
+                    onDelete={() => handleDeleteQuestion(q.ID)}
                   />
                 ))}
               </div>

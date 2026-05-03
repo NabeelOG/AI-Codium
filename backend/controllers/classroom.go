@@ -62,7 +62,7 @@ func CreateClassroom(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"id":           classroom.ID,
+		"ID":           classroom.ID,
 		"name":         classroom.Name,
 		"description":  classroom.Description,
 		"teacher_id":   classroom.TeacherID,
