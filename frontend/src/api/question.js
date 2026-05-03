@@ -21,7 +21,7 @@ export async function updateQuestion(questionId, payload) {
 }
 
 export async function deleteQuestion(questionId) {
-    const {data} = await client.delete(`/questions/${questionId}`, payload)
+    const {data} = await client.delete(`/questions/${questionId}`)
     return data;
 }
 

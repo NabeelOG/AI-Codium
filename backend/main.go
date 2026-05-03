@@ -46,7 +46,9 @@ func main() {
 		// Enrollments
 
 		// Questions
+		api.GET("/classrooms/:id/questions", controllers.GetClassroomQuestions)
 		api.POST("/classrooms/:id/questions", controllers.CreateQuestion)
+		api.PUT("/questions/:id", controllers.UpdateQuestion)
 		// Submissions
 
 	}
