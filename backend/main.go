@@ -48,6 +48,7 @@ func main() {
 		// Questions
 		api.GET("/classrooms/:id/questions", controllers.GetClassroomQuestions)
 		api.POST("/classrooms/:id/questions", controllers.CreateQuestion)
+		api.GET("/questions/:id", controllers.GetQuestion)
 		api.PUT("/questions/:id", controllers.UpdateQuestion)
 		api.DELETE("/questions/:id", controllers.DeleteQuestion)
 		// Submissions

@@ -166,7 +166,7 @@ export default function StudentDashboardPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
             {classrooms.map(cls => (
               <ClassroomCard
-                key={cls.id}
+                key={cls.ID}
                 classroom={cls}
                 onEnter={() => navigate(`/student/classroom/${cls.ID}`)}
                 questionCount={questionsCount[cls.ID] || 0}

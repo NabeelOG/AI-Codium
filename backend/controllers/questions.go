@@ -123,6 +123,20 @@ func GetClassroomQuestions(c *gin.Context) {
 	c.JSON(http.StatusOK, questions)
 }
 
+func GetQuestion(c *gin.Context) {
+	questionID := c.Param("id")
+
+	var question models.Question
+	if err := initializers.DB.First(&question, questionID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Question not found",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, question)
+}
+
 func UpdateQuestion(c *gin.Context) {
 	questionID := c.Param("id")
 	userID := c.GetUint("userID")

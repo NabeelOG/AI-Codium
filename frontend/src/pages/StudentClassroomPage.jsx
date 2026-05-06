@@ -99,8 +99,8 @@ export default function StudentClassroomPage() {
               const isLast = idx === questions.length - 1
               return (
                 <div
-                  key={q.id}
-                  onClick={() => navigate(`/student/classroom/${id}/question/${q.id}`)}
+                  key={q.ID}
+                  onClick={() => navigate(`/student/classroom/${id}/question/${q.ID}`)}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '1rem 1.25rem',
