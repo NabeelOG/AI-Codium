@@ -195,3 +195,54 @@ func UpdateQuestion(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, question)
 }
+
+func DeleteQuestion(c *gin.Context) {
+	questionID := c.Param("id")
+	userID := c.GetUint("userID")
+	userRole := c.GetString("role")
+
+	// Only teacher can create questions
+	if userRole != "teacher" {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "Only teacher can delete question",
+		})
+		return
+	}
+
+	// Find the question
+	var question models.Question
+	if err := initializers.DB.First(&question, questionID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "question not found",
+		})
+		return
+	}
+
+	// verify teacher ows the classroom that this question belongs to
+	var classroom models.Classroom
+	if err := initializers.DB.First(&classroom, question.ClassroomID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "classroom not found",
+		})
+		return
+	}
+
+	if classroom.TeacherID != userID {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "You dont own this classroom",
+		})
+		return
+	}
+
+	// Delete the question
+	if err := initializers.DB.Delete(&question).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to delete question",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Question deleted successfully",
+	})
+}

@@ -12,9 +12,9 @@ function JoinModal({ onClose, onJoin, isLoading }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!code.trim()) { 
-      setError('Enter an invite code.'); 
-      return 
+    if (!code.trim()) {
+      setError('Enter an invite code.');
+      return
     }
     const result = await onJoin(code.trim().toUpperCase())
     if (result?.error) setError(result.error)
@@ -71,21 +71,18 @@ export default function StudentDashboardPage() {
   const [questionsCount, setQuestionsCount] = useState({})
 
   // Load classrooms on component mount
-  useEffect(() => {
-    loadClassrooms()
-  }, [])
-
   const loadClassrooms = async () => {
     setLoading(true)
     try {
       const data = await getStudentClassrooms()
+      console.log('Classroom loaded')
       setClassrooms(data)
-      
+
       // Load question counts for each classroom
       const counts = {}
       for (const classroom of data) {
-        const questions = await getClassroomQuestions(classroom.id)
-        counts[classroom.id] = questions.length
+        const questions = await getClassroomQuestions(classroom.ID)
+        counts[classroom.ID] = questions.length
       }
       setQuestionsCount(counts)
     } catch (error) {
@@ -94,6 +91,13 @@ export default function StudentDashboardPage() {
       setLoading(false)
     }
   }
+  useEffect(() => {
+    const load = async () => {
+      loadClassrooms()
+    }
+    load()
+  }, [])
+
 
   const handleJoin = async (code) => {
     setJoining(true)
@@ -106,7 +110,7 @@ export default function StudentDashboardPage() {
     } catch (error) {
       console.error('Join error:', error)
       let errorMessage = 'Failed to join classroom.'
-      
+
       if (error.response?.status === 404) {
         errorMessage = 'No classroom found with this code.'
       } else if (error.response?.status === 403) {
@@ -114,7 +118,7 @@ export default function StudentDashboardPage() {
       } else if (error.response?.status === 409) {
         errorMessage = 'You are already enrolled in this classroom.'
       }
-      
+
       return { error: errorMessage }
     } finally {
       setJoining(false)
@@ -161,11 +165,11 @@ export default function StudentDashboardPage() {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
             {classrooms.map(cls => (
-              <ClassroomCard 
-                key={cls.id} 
-                classroom={cls} 
-                onEnter={() => navigate(`/student/classroom/${cls.id}`)} 
-                questionCount={questionsCount[cls.id] || 0}
+              <ClassroomCard
+                key={cls.id}
+                classroom={cls}
+                onEnter={() => navigate(`/student/classroom/${cls.ID}`)}
+                questionCount={questionsCount[cls.ID] || 0}
               />
             ))}
           </div>
@@ -173,8 +177,8 @@ export default function StudentDashboardPage() {
       </main>
 
       {showJoin && (
-        <JoinModal 
-          onClose={() => setShowJoin(false)} 
+        <JoinModal
+          onClose={() => setShowJoin(false)}
           onJoin={handleJoin}
           isLoading={joining}
         />
