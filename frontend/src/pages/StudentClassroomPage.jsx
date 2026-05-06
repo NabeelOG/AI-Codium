@@ -1,17 +1,47 @@
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
-import { classroomStore, questionStore, submissionStore } from '../store/mockStore'
-import { useAuth } from '../hooks/useAuth'
+import { getClassroom } from '../api/classroom'
+import { getClassroomQuestions } from '../api/question'
+import LoadingSpinner from '../components/LoadingSpinner'
 
 export default function StudentClassroomPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const [classroom, setClassroom] = useState(null)
+  const [questions, setQuestions] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const classroom = classroomStore.byId(id)
-  const questions = questionStore.forClassroom(id)
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const classroomData = await getClassroom(id)
+        const questionsData = await getClassroomQuestions(id)
+
+        setClassroom(classroomData)
+        setQuestions(questionsData)
+      } catch (error) {
+        console.error('Failed to load:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [id])
 
   const diffColors = { easy: 'badge-easy', medium: 'badge-medium', hard: 'badge-hard' }
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-surface)' }}>
+        <Sidebar />
+        <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <LoadingSpinner size={40} />
+        </main>
+      </div>
+    )
+  }
 
   if (!classroom) {
     return (
@@ -35,7 +65,6 @@ export default function StudentClassroomPage() {
       <Sidebar />
 
       <main style={{ flex: 1, overflowY: 'auto', padding: '2rem 2rem 3rem' }}>
-        {/* Breadcrumb */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', fontSize: '0.875rem', color: 'var(--color-on-surface-variant)' }}>
           <button className="btn btn-ghost" style={{ padding: '0.125rem 0', fontSize: '0.875rem' }} onClick={() => navigate('/student/dashboard')}>
             My Classes
@@ -44,22 +73,20 @@ export default function StudentClassroomPage() {
           <span style={{ color: 'var(--color-on-surface)', fontWeight: 600 }}>{classroom.name}</span>
         </div>
 
-        {/* Header */}
         <div style={{ marginBottom: '1.5rem' }}>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-on-surface)', margin: '0 0 0.25rem' }}>
             {classroom.name}
           </h1>
           <p style={{ fontSize: '0.9rem', color: 'var(--color-on-surface-variant)', margin: 0 }}>
-            {classroom.description || `Taught by ${classroom.teacherName}`}
+            {classroom.description || `Taught by ${classroom.teacher_name || classroom.teacherName}`}
           </p>
         </div>
 
-        {/* Questions */}
         {questions.length === 0 ? (
           <div className="card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-on-surface-variant)' }}>
             <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>📭</div>
             <div style={{ fontWeight: 600 }}>No questions yet</div>
-            <div style={{ fontSize: '0.875rem', marginTop: '0.375rem' }}>Your teacher hasn&apos;t added any questions yet. Check back soon.</div>
+            <div style={{ fontSize: '0.875rem', marginTop: '0.375rem' }}>Your teacher hasn't added any questions yet. Check back soon.</div>
           </div>
         ) : (
           <div className="card" style={{ overflow: 'hidden' }}>
@@ -69,7 +96,6 @@ export default function StudentClassroomPage() {
               </span>
             </div>
             {questions.map((q, idx) => {
-              const submission = submissionStore.byStudentQuestion(q.id, user.id)
               const isLast = idx === questions.length - 1
               return (
                 <div
@@ -86,8 +112,8 @@ export default function StudentClassroomPage() {
                   onMouseLeave={e => e.currentTarget.style.background = ''}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', minWidth: 0 }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: 'var(--radius-DEFAULT)', background: submission ? '#dcfce7' : 'var(--color-surface-container)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700, color: submission ? '#166534' : 'var(--color-primary-container)', flexShrink: 0 }}>
-                      {submission ? '✓' : idx + 1}
+                    <div style={{ width: '36px', height: '36px', borderRadius: 'var(--radius-DEFAULT)', background: 'var(--color-surface-container)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-primary-container)', flexShrink: 0 }}>
+                      {idx + 1}
                     </div>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--color-on-surface)', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -100,11 +126,7 @@ export default function StudentClassroomPage() {
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-                    {submission ? (
-                      <span className="badge badge-active">Submitted</span>
-                    ) : (
-                      <span className="badge badge-archived">Not started</span>
-                    )}
+                    <span className="badge badge-archived">Not started</span>
                     <span style={{ color: 'var(--color-on-surface-variant)', fontSize: '0.875rem' }}>→</span>
                   </div>
                 </div>
