@@ -1,0 +1,9 @@
+{
+  "modeline_lines": 5,
+  "colorize_brackets": true,
+  "remove_trailing_whitespace_on_save": true,
+  "indent_guides": {
+    "background_coloring": "disabled"
+  },
+  "show_wrap_guides": true
+}

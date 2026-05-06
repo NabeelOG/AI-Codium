@@ -1,48 +1,67 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Editor from '@monaco-editor/react'
-import { questionStore, classroomStore, submissionStore } from '../store/mockStore'
 import { useAuth } from '../hooks/useAuth'
 import LoadingSpinner from '../components/LoadingSpinner'
+import { getClassroom } from '../api/classroom'
+import { getQuestion } from '../api/question'
+import { submitCode, getMySubmission } from '../api/submission'
 
-// Replace this function with a real LLM API call when backend is ready
-async function evaluateCode(code, question) {
-  await new Promise(r => setTimeout(r, 1800))
-  // Mock feedback based on code length as a simple heuristic
-  if (code.trim().length < 30) {
-    return { feedback: 'Your solution seems incomplete. Make sure you return the expected output and handle all edge cases described in the constraints.' }
-  }
-  return { feedback: null }
-}
-
-export default function ClassroomPage() {
+export default function StudentQuestionPage() {
   const { id: classroomId, qid } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
 
-  const question = questionStore.byId(qid)
-  const classroom = classroomStore.byId(classroomId)
-  const existing = submissionStore.byStudentQuestion(qid, user?.id)
-
-  const [code, setCode] = useState(existing?.code || question?.templateCode || '')
+  const [classroom, setClassroom] = useState(null)
+  const [question, setQuestion] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [code, setCode] = useState('')
   const [output, setOutput] = useState([])
   const [running, setRunning] = useState(false)
-  const [submitted, setSubmitted] = useState(Boolean(existing))
+  const [submitted, setSubmitted] = useState(false)
   const [activeTab, setActiveTab] = useState('output')
-  const [llmFeedback, setLlmFeedback] = useState(existing?.feedback || null)
+  const [llmFeedback, setLlmFeedback] = useState(null)
+  const [existingSubmission, setExistingSubmission] = useState(null)
 
   useEffect(() => {
-    if (existing) {
-      setCode(existing.code)
-      setLlmFeedback(existing.feedback)
-      setSubmitted(true)
+    const fetchData = async () => {
+      try {
+        const [classroomData, questionData] = await Promise.all([
+          getClassroom(classroomId),
+          getQuestion(qid)
+        ])
+
+        setClassroom(classroomData)
+        setQuestion(questionData)
+        setCode(questionData.template_code || '')
+
+        // Check for existing submission
+        try {
+          const submission = await getMySubmission(qid)
+          if (submission.submitted) {
+            setExistingSubmission(submission)
+            setCode(submission.code || questionData.template_code || '')
+            setLlmFeedback(submission.feedback)
+            setSubmitted(true)
+          }
+        } catch (err) {
+          console.log('No existing submission:', err)
+        }
+      } catch (error) {
+        console.error('Failed to load:', error)
+      } finally {
+        setLoading(false)
+      }
     }
-  }, [qid])
+    fetchData()
+  }, [classroomId, qid])
 
   const handleRun = async () => {
     setRunning(true)
     setOutput([{ type: 'info', text: 'Running your code…' }])
     setActiveTab('output')
+
+    // Simulate test execution (replace with actual backend execution later)
     await new Promise(r => setTimeout(r, 900))
     setOutput([
       { type: 'check', text: 'Test Case 1: Passed' },
@@ -54,31 +73,38 @@ export default function ClassroomPage() {
 
   const handleSubmit = async () => {
     if (!user) return
+
     setRunning(true)
     setOutput([{ type: 'info', text: 'Submitting and analysing with AI…' }])
     setActiveTab('output')
 
-    const { feedback } = await evaluateCode(code, question)
-    setLlmFeedback(feedback)
+    try {
+      const result = await submitCode(qid, { code })
 
-    submissionStore.upsert({
-      questionId: qid,
-      classroomId,
-      studentId: user.id,
-      studentName: user.name,
-      code,
-      feedback,
-    })
+      setLlmFeedback(result.feedback)
+      setSubmitted(true)
+      setExistingSubmission(result.submission)
 
-    setOutput([
-      ...(feedback
-        ? [{ type: 'warn', text: 'Submitted with feedback — review the LLM note.' }]
-        : [{ type: 'check', text: 'Solution submitted successfully!' }]
-      ),
-      { type: 'info', text: `Submitted at ${new Date().toLocaleTimeString()}` },
-    ])
-    setSubmitted(true)
-    setRunning(false)
+      setOutput([
+        { type: 'check', text: result.feedback ? 'Submitted with feedback — review the LLM note.' : 'Solution submitted successfully!' },
+        { type: 'info', text: `Submitted at ${new Date().toLocaleTimeString()}` },
+      ])
+    } catch (error) {
+      console.error('Submission failed:', error)
+      setOutput([
+        { type: 'error', text: 'Failed to submit. Please try again.' },
+      ])
+    } finally {
+      setRunning(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-surface)' }}>
+        <LoadingSpinner size={40} />
+      </div>
+    )
   }
 
   if (!question) {
@@ -99,7 +125,6 @@ export default function ClassroomPage() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--color-surface)' }}>
-      {/* Two-panel layout */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Top bar */}
         <div style={{ height: '48px', borderBottom: '1px solid var(--color-outline-variant)', background: 'var(--color-surface-lowest)', display: 'flex', alignItems: 'center', padding: '0 1rem', gap: '1rem', flexShrink: 0 }}>
@@ -174,9 +199,9 @@ export default function ClassroomPage() {
               <span style={{ fontFamily: 'var(--font-grotesk)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-on-surface)' }}>
                 solution.{question.language === 'python' ? 'py' : question.language === 'java' ? 'java' : 'js'}
               </span>
-              {submitted && (
+              {submitted && existingSubmission && (
                 <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-grotesk)', fontSize: '0.6875rem', color: 'var(--color-on-surface-variant)' }}>
-                  Last submitted {new Date(existing?.submittedAt || Date.now()).toLocaleTimeString()}
+                  Last submitted {new Date(existingSubmission.updated_at).toLocaleTimeString()}
                 </span>
               )}
             </div>

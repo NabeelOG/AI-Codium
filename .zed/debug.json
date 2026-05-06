@@ -1,0 +1,13 @@
+[
+  {
+    "label": "Debug Backend (Gin)",
+    "adapter": "Delve",
+    "program": "${ZED_WORKTREE_ROOT}/backend/main.go",
+    "request": "launch",
+    "mode": "debug",
+    "cwd": "${ZED_WORKTREE_ROOT}/backend",
+    "env": {
+      "PORT": "8080"
+    }
+  }
+]
