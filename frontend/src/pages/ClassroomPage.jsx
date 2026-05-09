@@ -56,20 +56,20 @@ export default function StudentQuestionPage() {
     fetchData()
   }, [classroomId, qid])
 
-  const handleRun = async () => {
-    setRunning(true)
-    setOutput([{ type: 'info', text: 'Running your code…' }])
-    setActiveTab('output')
+  // const handleRun = async () => {
+  //   setRunning(true)
+  //   setOutput([{ type: 'info', text: 'Running your code…' }])
+  //   setActiveTab('output')
 
-    // Simulate test execution (replace with actual backend execution later)
-    await new Promise(r => setTimeout(r, 900))
-    setOutput([
-      { type: 'check', text: 'Test Case 1: Passed' },
-      { type: 'check', text: 'Test Case 2: Passed' },
-      { type: 'info', text: 'All visible test cases passed.' },
-    ])
-    setRunning(false)
-  }
+  //   // Simulate test execution (replace with actual backend execution later)
+  //   await new Promise(r => setTimeout(r, 900))
+  //   setOutput([
+  //     { type: 'check', text: 'Test Case 1: Passed' },
+  //     { type: 'check', text: 'Test Case 2: Passed' },
+  //     { type: 'info', text: 'All visible test cases passed.' },
+  //   ])
+  //   setRunning(false)
+  // }
 
   const handleSubmit = async () => {
     if (!user) return
@@ -267,9 +267,9 @@ export default function StudentQuestionPage() {
 
             {/* Action buttons */}
             <div style={{ display: 'flex', gap: '0.75rem', padding: '0.75rem 1rem', borderTop: '1px solid var(--color-outline-variant)', background: 'var(--color-surface-lowest)', flexShrink: 0 }}>
-              <button className="btn btn-secondary" onClick={handleRun} disabled={running} style={{ flex: 1, justifyContent: 'center', fontSize: '0.875rem' }}>
+              {/* <button className="btn btn-secondary" onClick={handleRun} disabled={running} style={{ flex: 1, justifyContent: 'center', fontSize: '0.875rem' }}>
                 {running ? <><LoadingSpinner size={14} /> Running…</> : '▶ Run Code'}
-              </button>
+              </button>*/}
               <button className="btn btn-primary" onClick={handleSubmit} disabled={running} style={{ flex: 1, justifyContent: 'center', fontSize: '0.875rem' }}>
                 {running ? <><LoadingSpinner size={14} color="#fff" /> Submitting…</> : submitted ? '↺ Re-submit' : '🚀 Submit'}
               </button>
