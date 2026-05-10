@@ -357,8 +357,17 @@ export default function StudentQuestionPage() {
                 ) : (
                   submissions.map((sub, idx) => (
                     <div key={sub.id} className="card" style={{ padding: '0.75rem', marginBottom: '0.75rem' }}>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--color-on-surface-variant)', marginBottom: '0.5rem' }}>
-                        #{submissions.length - idx} - {new Date(sub.CreatedAt).toLocaleString()}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--color-on-surface-variant)' }}>
+                          #{submissions.length - idx} - {new Date(sub.CreatedAt).toLocaleString()}
+                        </span>
+                        <button
+                          className="btn btn-ghost"
+                          style={{ fontSize: '0.6875rem', padding: '0.125rem 0.5rem' }}
+                          onClick={() => { setCode(sub.code); setShowHistory(false) }}
+                        >
+                          Copy to Editor
+                        </button>
                       </div>
                       <details>
                         <summary style={{ cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem' }}>View Code</summary>
