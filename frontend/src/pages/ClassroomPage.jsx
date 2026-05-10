@@ -2,15 +2,17 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Editor from '@monaco-editor/react'
 import { useAuth } from '../hooks/useAuth'
+import { useTheme } from '../hooks/useTheme'
 import LoadingSpinner from '../components/LoadingSpinner'
 import { getClassroom } from '../api/classroom'
 import { getQuestion } from '../api/question'
-import { submitCode, getMySubmission } from '../api/submission'
+import { submitCode, getMySubmission, getMySubmissions } from '../api/submission'
 
 export default function StudentQuestionPage() {
   const { id: classroomId, qid } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { theme } = useTheme()
 
   const [classroom, setClassroom] = useState(null)
   const [question, setQuestion] = useState(null)
@@ -22,6 +24,17 @@ export default function StudentQuestionPage() {
   const [activeTab, setActiveTab] = useState('output')
   const [llmFeedback, setLlmFeedback] = useState(null)
   const [existingSubmission, setExistingSubmission] = useState(null)
+  const [submissions, setSubmissions] = useState([])
+  const [showHistory, setShowHistory] = useState(false)
+
+  const fetchSubmissions = async () => {
+    try {
+      const data = await getMySubmissions(qid)  // Use the imported function
+      setSubmissions(data)
+    } catch (error) {
+      console.error('Failed to fetch submissions:', error)
+    }
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,18 +48,19 @@ export default function StudentQuestionPage() {
         setQuestion(questionData)
         setCode(questionData.template_code || '')
 
-        // Check for existing submission
         try {
           const submission = await getMySubmission(qid)
           if (submission.submitted) {
-            setExistingSubmission(submission)
-            setCode(submission.code || questionData.template_code || '')
-            setLlmFeedback(submission.feedback)
+            setExistingSubmission(submission.submission)
+            setCode(submission.submission.code || questionData.template_code || '')
+            setLlmFeedback(submission.submission.feedback)
             setSubmitted(true)
           }
         } catch (err) {
           console.log('No existing submission:', err)
         }
+
+        fetchSubmissions()
       } catch (error) {
         console.error('Failed to load:', error)
       } finally {
@@ -84,6 +98,7 @@ export default function StudentQuestionPage() {
       setLlmFeedback(result.feedback)
       setSubmitted(true)
       setExistingSubmission(result.submission)
+      fetchSubmissions()
 
       setOutput([
         { type: 'check', text: result.feedback ? 'Submitted with feedback — review the LLM note.' : 'Solution submitted successfully!' },
@@ -122,6 +137,11 @@ export default function StudentQuestionPage() {
   }
 
   const diffColors = { easy: 'badge-easy', medium: 'badge-medium', hard: 'badge-hard' }
+
+  const parseFeedback = (raw) => {
+    const stripped = raw.replace(/^```(?:json)?\s*\n/, '').replace(/\n```\s*$/, '')
+    return JSON.parse(stripped)
+  }
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--color-surface)' }}>
@@ -182,9 +202,58 @@ export default function StudentQuestionPage() {
                 <div style={{ fontFamily: 'var(--font-grotesk)', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.04em', color: 'var(--color-primary)', marginBottom: '0.5rem' }}>
                   ✨ LLM Feedback
                 </div>
-                <p style={{ fontSize: '0.875rem', color: 'var(--color-on-surface)', margin: 0, lineHeight: 1.6 }}>
-                  {llmFeedback}
-                </p>
+
+                {/* Try to parse as JSON */}
+                {(() => {
+                  try {
+                    const parsed = parseFeedback(llmFeedback)
+                    return (
+                      <div>
+                        {/* Status Badge */}
+                        <div style={{ marginBottom: '0.75rem' }}>
+                          <span className={`badge ${
+                            parsed.status === 'passed' ? 'badge-active' :
+                            parsed.status === 'error' ? 'badge-archived' :
+                            'badge-medium'
+                          }`}>
+                            {parsed.status?.toUpperCase() || 'NEEDS IMPROVEMENT'}
+                          </span>
+                        </div>
+
+                        {/* Suggestions */}
+                        {parsed.suggestions && (
+                          <div style={{ marginBottom: '0.75rem' }}>
+                            <div style={{ fontWeight: 600, fontSize: '0.75rem', marginBottom: '0.25rem', color: 'var(--color-on-surface)' }}>
+                              💡 Suggestions
+                            </div>
+                            <p style={{ fontSize: '0.875rem', color: 'var(--color-on-surface)', margin: 0, lineHeight: 1.6 }}>
+                              {parsed.suggestions}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Issues */}
+                        {parsed.issues && (
+                          <div>
+                            <div style={{ fontWeight: 600, fontSize: '0.75rem', marginBottom: '0.25rem', color: 'var(--color-error)' }}>
+                              ⚠️ Issues
+                            </div>
+                            <p style={{ fontSize: '0.875rem', color: 'var(--color-on-surface)', margin: 0, lineHeight: 1.6 }}>
+                              {parsed.issues}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  } catch (e) {
+                    // If not JSON, display as plain text
+                    return (
+                      <p style={{ fontSize: '0.875rem', color: 'var(--color-on-surface)', margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                        {llmFeedback}
+                      </p>
+                    )
+                  }
+                })()}
               </div>
             )}
           </div>
@@ -201,7 +270,7 @@ export default function StudentQuestionPage() {
               </span>
               {submitted && existingSubmission && (
                 <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-grotesk)', fontSize: '0.6875rem', color: 'var(--color-on-surface-variant)' }}>
-                  Last submitted {new Date(existingSubmission.updated_at).toLocaleTimeString()}
+                  Last submitted {new Date(existingSubmission.UpdatedAt).toLocaleTimeString()}
                 </span>
               )}
             </div>
@@ -213,7 +282,7 @@ export default function StudentQuestionPage() {
                 language={question.language === 'cpp' ? 'cpp' : question.language === 'typescript' ? 'typescript' : question.language}
                 value={code}
                 onChange={v => setCode(v || '')}
-                theme="vs"
+                theme={theme === 'dark' ? 'vs-dark' : 'vs'}
                 options={{
                   minimap: { enabled: false },
                   fontSize: 14,
@@ -252,8 +321,8 @@ export default function StudentQuestionPage() {
                 ) : (
                   output.map((line, i) => (
                     <div key={i} style={{
-                      color: line.type === 'check' ? '#166534'
-                           : line.type === 'warn'  ? '#854d0e'
+                      color: line.type === 'check' ? 'var(--color-console-success)'
+                           : line.type === 'warn'  ? 'var(--color-console-warn)'
                            : line.type === 'error' ? 'var(--color-error)'
                            : 'var(--color-on-surface-variant)',
                       marginBottom: '0.125rem',
@@ -265,11 +334,57 @@ export default function StudentQuestionPage() {
               </div>
             </div>
 
+            {showHistory && (
+              <div style={{
+                position: 'fixed',
+                right: 0,
+                top: 0,
+                width: '400px',
+                height: '100vh',
+                background: 'var(--color-surface-lowest)',
+                borderLeft: '1px solid var(--color-outline-variant)',
+                zIndex: 1000,
+                overflowY: 'auto',
+                padding: '1rem'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                  <h3>Your Submissions</h3>
+                  <button onClick={() => setShowHistory(false)} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer' }}>×</button>
+                </div>
+
+                {submissions.length === 0 ? (
+                  <p>No submissions yet</p>
+                ) : (
+                  submissions.map((sub, idx) => (
+                    <div key={sub.id} className="card" style={{ padding: '0.75rem', marginBottom: '0.75rem' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--color-on-surface-variant)', marginBottom: '0.5rem' }}>
+                        #{submissions.length - idx} - {new Date(sub.CreatedAt).toLocaleString()}
+                      </div>
+                      <details>
+                        <summary style={{ cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem' }}>View Code</summary>
+                        <pre style={{ fontSize: '0.75rem', overflow: 'auto', marginTop: '0.5rem', padding: '0.5rem', background: 'var(--color-surface)', borderRadius: 'var(--radius-DEFAULT)' }}>
+                          {sub.code}
+                        </pre>
+                      </details>
+                      {sub.feedback && (
+                        <div style={{ fontSize: '0.8125rem', marginTop: '0.5rem', padding: '0.5rem', background: 'var(--color-primary-fixed)', borderRadius: 'var(--radius-DEFAULT)' }}>
+                          <strong>Feedback:</strong> {sub.feedback}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
             {/* Action buttons */}
             <div style={{ display: 'flex', gap: '0.75rem', padding: '0.75rem 1rem', borderTop: '1px solid var(--color-outline-variant)', background: 'var(--color-surface-lowest)', flexShrink: 0 }}>
               {/* <button className="btn btn-secondary" onClick={handleRun} disabled={running} style={{ flex: 1, justifyContent: 'center', fontSize: '0.875rem' }}>
                 {running ? <><LoadingSpinner size={14} /> Running…</> : '▶ Run Code'}
               </button>*/}
+              <button className="btn btn-secondary" onClick={() => setShowHistory(!showHistory)} style={{ fontSize: '0.875rem' }}>
+                📜 History
+              </button>
               <button className="btn btn-primary" onClick={handleSubmit} disabled={running} style={{ flex: 1, justifyContent: 'center', fontSize: '0.875rem' }}>
                 {running ? <><LoadingSpinner size={14} color="#fff" /> Submitting…</> : submitted ? '↺ Re-submit' : '🚀 Submit'}
               </button>

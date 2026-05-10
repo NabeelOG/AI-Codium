@@ -123,7 +123,7 @@ function SubmissionRow({ sub, isLast }) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           {sub.feedback ? (
-            <span className="badge" style={{ background: '#fef9c3', color: '#854d0e' }}>Has LLM Feedback</span>
+            <span className="badge badge-medium">Has LLM Feedback</span>
           ) : (
             <span className="badge badge-active">Clean Submit</span>
           )}

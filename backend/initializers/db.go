@@ -32,5 +32,6 @@ func SyncDB() {
 		&models.Classroom{},
 		&models.Enrollment{},
 		&models.Question{},
+		&models.Submission{},
 	)
 }

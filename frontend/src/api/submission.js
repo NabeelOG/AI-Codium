@@ -14,3 +14,13 @@ export async function getSubmissions(questionId) {
   const { data } = await client.get(`/questions/${questionId}/submissions`)
   return data
 }
+
+export async function getMySubmissions(questionId) {
+  const { data } = await client.get(`/questions/${questionId}/my-submissions`)
+  return data
+}
+
+export async function getClassroomMySubmissions(classroomId) {
+  const { data } = await client.get(`/classrooms/${classroomId}/my-submissions`)
+  return data
+}
