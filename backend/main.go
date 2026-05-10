@@ -54,6 +54,7 @@ func main() {
 
 		// Submissions
 		api.POST("/questions/:id/submit", controllers.SubmitCode)
+		api.GET("/questions/:id/submissions", controllers.GetQuestionSubmissions)
 		api.GET("/questions/:id/my-submissions", controllers.GetStudentSubmissions)
 		api.GET("/questions/:id/my-submission", controllers.GetMySubmission)
 		api.GET("/classrooms/:id/my-submissions", controllers.GetClassroomMySubmissions)

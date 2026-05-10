@@ -67,6 +67,17 @@ func SubmitCode(c *gin.Context) {
 	}
 	initializers.DB.Create(&submission)
 
+	// Enforce max 3 submissions per student per question
+	var allSubs []models.Submission
+	initializers.DB.Where("question_id = ? AND student_id = ?", question.ID, studentID).
+		Order("created_at DESC").
+		Find(&allSubs)
+	if len(allSubs) > 3 {
+		for _, s := range allSubs[3:] {
+			initializers.DB.Delete(&s)
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message":    "Code submitted successfully",
 		"feedback":   feedback,
@@ -217,6 +228,44 @@ func GetClassroomMySubmissions(c *gin.Context) {
 
     var submissions []models.Submission
     if err := initializers.DB.Where("classroom_id = ? AND student_id = ?", classroomID, studentID).
+        Find(&submissions).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch submissions"})
+        return
+    }
+
+    c.JSON(http.StatusOK, submissions)
+}
+
+func GetQuestionSubmissions(c *gin.Context) {
+    questionID := c.Param("id")
+    userID := c.GetUint("userID")
+    userRole := c.GetString("role")
+
+    if userRole != "teacher" {
+        c.JSON(http.StatusForbidden, gin.H{"error": "Only teachers can view all submissions"})
+        return
+    }
+
+    var question models.Question
+    if err := initializers.DB.First(&question, questionID).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Question not found"})
+        return
+    }
+
+    var classroom models.Classroom
+    if err := initializers.DB.First(&classroom, question.ClassroomID).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Classroom not found"})
+        return
+    }
+
+    if classroom.TeacherID != userID {
+        c.JSON(http.StatusForbidden, gin.H{"error": "You dont own this classroom"})
+        return
+    }
+
+    var submissions []models.Submission
+    if err := initializers.DB.Where("question_id = ?", questionID).
+        Order("created_at DESC").
         Find(&submissions).Error; err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch submissions"})
         return
