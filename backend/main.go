@@ -26,6 +26,9 @@ func main() {
 		})
 	})
 
+	// Public join preview (no auth required)
+	router.GET("/join/:code", controllers.GetClassroomByCode)
+
 	auth := router.Group("/auth")
 	{
 		auth.POST("/register", controllers.Register)
@@ -44,6 +47,7 @@ func main() {
 		api.GET("/classrooms/code/:code", controllers.GetClassroomByCode)
 
 		// Enrollments
+		api.POST("/join/:code", controllers.JoinClassroom)
 
 		// Questions
 		api.GET("/classrooms/:id/questions", controllers.GetClassroomQuestions)
