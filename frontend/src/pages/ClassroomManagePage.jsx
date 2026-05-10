@@ -24,11 +24,11 @@ export default function ClassroomManagePage() {
       try {
         const classroomData = await getClassroom(id);
         const questionsData = await getClassroomQuestions(id);
-        // const studentsData = await getClassroomStudents(id)
+        const studentsData = await getClassroomStudents(id);
 
         setClassroom(classroomData);
         setQuestions(questionsData);
-        // setStudents(studentsData)
+        setStudents(studentsData)
       } catch (error) {
         console.error("Failed to load classroom:", error);
       } finally {
@@ -427,7 +427,7 @@ export default function ClassroomManagePage() {
                         flexShrink: 0,
                       }}
                     >
-                      {(s.studentName || s.name)[0]?.toUpperCase()}
+                      {(s.StudentName || s.name)[0]?.toUpperCase()}
                     </div>
                     <div>
                       <div
@@ -437,7 +437,7 @@ export default function ClassroomManagePage() {
                           color: "var(--color-on-surface)",
                         }}
                       >
-                        {s.studentName || s.name}
+                        {s.StudentName}
                       </div>
                       <div
                         style={{
@@ -445,10 +445,7 @@ export default function ClassroomManagePage() {
                           color: "var(--color-on-surface-variant)",
                         }}
                       >
-                        Joined{" "}
-                        {new Date(
-                          s.createdAt || s.joinedAt,
-                        ).toLocaleDateString()}
+                        Joined{" "}{new Date(s.CreatedAt).toLocaleDateString()}
                       </div>
                     </div>
                   </div>

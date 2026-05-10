@@ -48,6 +48,7 @@ func main() {
 
 		// Enrollments
 		api.POST("/join/:code", controllers.JoinClassroom)
+		api.GET("/classrooms/:id/students", controllers.GetClassroomStudents)
 
 		// Questions
 		api.GET("/classrooms/:id/questions", controllers.GetClassroomQuestions)

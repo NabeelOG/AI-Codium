@@ -66,3 +66,33 @@ func JoinClassroom(c *gin.Context) {
 		},
 	})
 }
+
+func GetClassroomStudents(c *gin.Context) {
+	classroomID := c.Param("id")
+	userID := c.GetUint("userID")
+	userRole := c.GetString("role")
+
+	if userRole != "teacher" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only teachers can view student list"})
+		return
+	}
+
+	var classroom models.Classroom
+	if err := initializers.DB.First(&classroom, classroomID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Classroom not found"})
+		return
+	}
+
+	if classroom.TeacherID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You dont own this classroom"})
+		return
+	}
+
+	var enrollments []models.Enrollment
+	if err := initializers.DB.Where("classroom_id = ?", classroomID).Find(&enrollments).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch students"})
+		return
+	}
+
+	c.JSON(http.StatusOK, enrollments)
+}
