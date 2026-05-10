@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import Editor from '@monaco-editor/react'
 import Sidebar from '../components/Sidebar'
 import LoadingSpinner from '../components/LoadingSpinner'
+import { useTheme } from '../hooks/useTheme'
 import { getClassroomQuestions, createQuestion, getQuestion, updateQuestion } from '../api/question'
 import { getClassroom } from '../api/classroom'
 
@@ -14,6 +15,7 @@ export default function QuestionCreatorPage() {
   const location = useLocation()
   const isEdit = Boolean(qid)
   const passedQuestion = location.state?.question
+  const { theme } = useTheme()
   const [loading, setLoading] = useState(true)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -191,7 +193,7 @@ export default function QuestionCreatorPage() {
                   language={language === 'cpp' ? 'cpp' : language}
                   value={templateCode}
                   onChange={v => setTemplateCode(v || '')}
-                  theme="vs"
+                  theme={theme === 'dark' ? 'vs-dark' : 'vs'}
                   options={{
                     minimap: { enabled: false },
                     fontSize: 14,

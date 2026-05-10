@@ -51,8 +51,12 @@ func main() {
 		api.GET("/questions/:id", controllers.GetQuestion)
 		api.PUT("/questions/:id", controllers.UpdateQuestion)
 		api.DELETE("/questions/:id", controllers.DeleteQuestion)
-		// Submissions
 
+		// Submissions
+		api.POST("/questions/:id/submit", controllers.SubmitCode)
+		api.GET("/questions/:id/my-submissions", controllers.GetStudentSubmissions)
+		api.GET("/questions/:id/my-submission", controllers.GetMySubmission)
+		api.GET("/classrooms/:id/my-submissions", controllers.GetClassroomMySubmissions)
 	}
 
 	port := os.Getenv("PORT")

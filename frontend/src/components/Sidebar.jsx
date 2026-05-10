@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useTheme } from '../hooks/useTheme'
 
 const TEACHER_NAV = [
   { to: '/teacher/dashboard', icon: '⊞', label: 'Classrooms' },
@@ -11,6 +12,7 @@ const STUDENT_NAV = [
 
 export default function Sidebar({ onCreateClassroom }) {
   const { user, logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const isTeacher = user?.role === 'teacher'
   const navItems = isTeacher ? TEACHER_NAV : STUDENT_NAV
@@ -110,6 +112,21 @@ export default function Sidebar({ onCreateClassroom }) {
             + New Classroom
           </button>
         )}
+        <button
+          onClick={toggleTheme}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '0.5rem',
+            width: '100%', padding: '0.5rem 0.75rem',
+            borderRadius: 'var(--radius-DEFAULT)',
+            fontSize: '0.875rem', color: 'var(--color-on-surface-variant)',
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            transition: 'background 0.15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--color-surface-container)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+        >
+          {theme === 'dark' ? '☀️' : '🌙'} {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+        </button>
         <button
           onClick={handleLogout}
           style={{

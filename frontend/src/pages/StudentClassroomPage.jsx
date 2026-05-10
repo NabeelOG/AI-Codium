@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import { getClassroom } from '../api/classroom'
 import { getClassroomQuestions } from '../api/question'
+import { getClassroomMySubmissions } from '../api/submission'
 import LoadingSpinner from '../components/LoadingSpinner'
 
 export default function StudentClassroomPage() {
@@ -11,6 +12,7 @@ export default function StudentClassroomPage() {
   const [classroom, setClassroom] = useState(null)
   const [questions, setQuestions] = useState([])
   const [loading, setLoading] = useState(true)
+  const [submittedQs, setSubmittedQs] = useState(new Set())
 
   useEffect(() => {
     const fetchData = async () => {
@@ -20,6 +22,14 @@ export default function StudentClassroomPage() {
 
         setClassroom(classroomData)
         setQuestions(questionsData)
+
+        try {
+          const submissions = await getClassroomMySubmissions(id)
+          const ids = new Set(submissions.map(s => s.question_id))
+          setSubmittedQs(ids)
+        } catch (err) {
+          console.log('Failed to load submission status:', err)
+        }
       } catch (error) {
         console.error('Failed to load:', error)
       } finally {
@@ -126,7 +136,9 @@ export default function StudentClassroomPage() {
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-                    <span className="badge badge-archived">Not started</span>
+                    <span className={`badge ${submittedQs.has(q.ID) ? 'badge-active' : 'badge-archived'}`}>
+                      {submittedQs.has(q.ID) ? 'Submitted' : 'Not started'}
+                    </span>
                     <span style={{ color: 'var(--color-on-surface-variant)', fontSize: '0.875rem' }}>→</span>
                   </div>
                 </div>
