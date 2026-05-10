@@ -1,18 +1,34 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { classroomStore, enrollmentStore } from '../store/mockStore'
 import { useAuth } from '../hooks/useAuth'
+import { joinClassroom } from '../api/classroom'
+import client from '../api/client'
 import LoadingSpinner from '../components/LoadingSpinner'
 
 export default function JoinPage() {
   const { code } = useParams()
   const navigate = useNavigate()
   const { user, isAuthenticated } = useAuth()
+  const [classroom, setClassroom] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [joining, setJoining] = useState(false)
   const [error, setError] = useState('')
   const [joined, setJoined] = useState(false)
+  const [alreadyEnrolled, setAlreadyEnrolled] = useState(false)
 
-  const classroom = classroomStore.byCode(code)
+  useEffect(() => {
+    const fetchClassroom = async () => {
+      try {
+        const { data } = await client.get(`/join/${code}`)
+        setClassroom(data)
+      } catch {
+        setClassroom(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchClassroom()
+  }, [code])
 
   const handleJoin = async () => {
     if (!isAuthenticated) {
@@ -24,21 +40,38 @@ export default function JoinPage() {
       return
     }
     setJoining(true)
-    await new Promise(r => setTimeout(r, 500))
-    enrollmentStore.enroll(classroom.id, user.id, user.name)
-    setJoined(true)
-    setJoining(false)
-    setTimeout(() => navigate(`/student/classroom/${classroom.id}`), 1200)
+    setError('')
+    try {
+      await joinClassroom(code)
+      setJoined(true)
+      setTimeout(() => navigate(`/student/classroom/${classroom.id}`), 1200)
+    } catch (err) {
+      const status = err.response?.status
+      if (status === 400 || status === 409) {
+        setAlreadyEnrolled(true)
+      } else if (status === 404) {
+        setError('Invalid invite code.')
+      } else if (status === 403) {
+        setError(err.response?.data?.error || 'This classroom is not available.')
+      } else {
+        setError('Failed to join. Please try again.')
+      }
+    } finally {
+      setJoining(false)
+    }
   }
 
-  const alreadyEnrolled = isAuthenticated && user?.role === 'student' && classroom
-    ? enrollmentStore.isEnrolled(classroom.id, user.id)
-    : false
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'var(--color-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <LoadingSpinner size={40} />
+      </div>
+    )
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
       <div style={{ width: '100%', maxWidth: '440px' }}>
-        {/* Brand */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-primary-container)' }}>&gt;_</span>
@@ -83,7 +116,6 @@ export default function JoinPage() {
             </div>
           ) : (
             <>
-              {/* Classroom info */}
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.5rem', padding: '1rem', background: 'var(--color-surface-low)', borderRadius: 'var(--radius-lg)' }}>
                 <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-lg)', background: 'var(--color-secondary-container)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0 }}>
                   🏫
@@ -94,7 +126,7 @@ export default function JoinPage() {
                     <div style={{ fontSize: '0.875rem', color: 'var(--color-on-surface-variant)', marginBottom: '0.25rem' }}>{classroom.description}</div>
                   )}
                   <div style={{ fontSize: '0.8125rem', color: 'var(--color-on-surface-variant)' }}>
-                    Taught by <strong>{classroom.teacherName}</strong>
+                    Taught by <strong>{classroom.teacher_name}</strong>
                   </div>
                 </div>
               </div>

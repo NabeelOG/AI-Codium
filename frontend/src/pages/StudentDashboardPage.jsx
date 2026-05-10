@@ -16,7 +16,7 @@ function JoinModal({ onClose, onJoin, isLoading }) {
       setError('Enter an invite code.');
       return
     }
-    const result = await onJoin(code.trim().toUpperCase())
+    const result = await onJoin(code.trim().toLowerCase())
     if (result?.error) setError(result.error)
   }
 
