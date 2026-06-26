@@ -13,10 +13,10 @@ import (
 func Register(c *gin.Context) {
 	// 1. Bind JSON body
 	var body struct {
-		Name     string
-		Email    string
-		Password string
-		Role     string
+		Name     string `json:"name" binding:"required"`
+		Email    string `json:"email" binding:"required,email"`
+		Password string `json:"password" binding:"required,min=8"`
+		Role     string `json:"role"`
 	}
 
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -60,7 +60,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	// 5. Return response (matched frontend contract)\
+	// 5. Return response (matched frontend contract)
 	c.JSON(http.StatusCreated, gin.H{
 		"token": token,
 		"user": gin.H{
@@ -115,7 +115,7 @@ func Login(c *gin.Context) {
 	}
 
 	// 5. Return response
-	c.JSON(http.StatusCreated, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"token": token,
 		"user": gin.H{
 			"id":    user.ID,

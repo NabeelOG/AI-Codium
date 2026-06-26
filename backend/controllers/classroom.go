@@ -4,15 +4,26 @@ import (
 	"aicodeium/initializers"
 	"aicodeium/models"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
+type classroomResponse struct {
+	ID          uint   `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	TeacherID   uint   `json:"teacher_id"`
+	TeacherName string `json:"teacher_name"`
+	InviteCode  string `json:"invite_code"`
+	Archived    bool   `json:"archived"`
+	CreatedAt   string `json:"created_at"`
+}
+
 func CreateClassroom(c *gin.Context) {
 	// Get teacher info from JWT middleware
 	teacherId := c.GetUint("userID")
-	// teacherEmail := c.GetString("email")
 	teacherRole := c.GetString("role")
 
 	if teacherRole != "teacher" {
@@ -62,14 +73,14 @@ func CreateClassroom(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"ID":           classroom.ID,
+		"id":           classroom.ID,
 		"name":         classroom.Name,
 		"description":  classroom.Description,
 		"teacher_id":   classroom.TeacherID,
 		"teacher_name": classroom.TeacherName,
 		"invite_code":  classroom.InviteCode,
 		"archived":     classroom.Archived,
-		"created_at":   classroom.CreatedAt,
+		"created_at":   classroom.CreatedAt.Format(time.RFC3339),
 	})
 }
 
@@ -103,7 +114,20 @@ func GetClassrooms(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, classrooms)
+	result := make([]classroomResponse, 0, len(classrooms))
+	for _, cr := range classrooms {
+		result = append(result, classroomResponse{
+			ID:          cr.ID,
+			Name:        cr.Name,
+			Description: cr.Description,
+			TeacherID:   cr.TeacherID,
+			TeacherName: cr.TeacherName,
+			InviteCode:  cr.InviteCode,
+			Archived:    cr.Archived,
+			CreatedAt:   cr.CreatedAt.Format(time.RFC3339),
+		})
+	}
+	c.JSON(http.StatusOK, result)
 }
 
 func GetClassroomByID(c *gin.Context) {
@@ -136,7 +160,7 @@ func GetClassroomByID(c *gin.Context) {
 		// Teacher must own the classroom
 		if classroom.TeacherID != userID {
 			c.JSON(http.StatusForbidden, gin.H{
-				"error": "You don'y own this classroom",
+				"error": "You don't own this classroom",
 			})
 			return
 		}
@@ -155,7 +179,7 @@ func GetClassroomByID(c *gin.Context) {
 		"teacher_name": classroom.TeacherName,
 		"invite_code":  classroom.InviteCode,
 		"archived":     classroom.Archived,
-		"created_at":   classroom.CreatedAt,
+		"created_at":   classroom.CreatedAt.Format(time.RFC3339),
 	})
 }
 
@@ -183,5 +207,6 @@ func GetClassroomByCode(c *gin.Context) {
 		"description":  classroom.Description,
 		"teacher_name": classroom.TeacherName,
 		"invite_code":  classroom.InviteCode,
+		"archived":     false,
 	})
 }

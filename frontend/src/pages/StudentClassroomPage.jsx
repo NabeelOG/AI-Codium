@@ -1,152 +1,314 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import Sidebar from '../components/Sidebar'
-import { getClassroom } from '../api/classroom'
-import { getClassroomQuestions } from '../api/question'
-import { getClassroomMySubmissions } from '../api/submission'
-import LoadingSpinner from '../components/LoadingSpinner'
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import Sidebar from "../components/Sidebar";
+import { getClassroom } from "../api/classroom";
+import { getClassroomQuestions } from "../api/question";
+import { getClassroomMySubmissions } from "../api/submission";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function StudentClassroomPage() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const [classroom, setClassroom] = useState(null)
-  const [questions, setQuestions] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [submittedQs, setSubmittedQs] = useState(new Set())
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [classroom, setClassroom] = useState(null);
+  const [questions, setQuestions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [submittedQs, setSubmittedQs] = useState(new Set());
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const classroomData = await getClassroom(id)
-        const questionsData = await getClassroomQuestions(id)
+        const classroomData = await getClassroom(id);
+        const questionsData = await getClassroomQuestions(id);
 
-        setClassroom(classroomData)
-        setQuestions(questionsData)
+        setClassroom(classroomData);
+        setQuestions(questionsData);
 
         try {
-          const submissions = await getClassroomMySubmissions(id)
-          const ids = new Set(submissions.map(s => s.question_id))
-          setSubmittedQs(ids)
+          const submissions = await getClassroomMySubmissions(id);
+          const ids = new Set(submissions.map((s) => s.question_id));
+          setSubmittedQs(ids);
         } catch (err) {
-          console.log('Failed to load submission status:', err)
+          console.log("Failed to load submission status:", err);
         }
       } catch (error) {
-        console.error('Failed to load:', error)
+        console.error("Failed to load:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchData()
-  }, [id])
+    fetchData();
+  }, [id]);
 
-  const diffColors = { easy: 'badge-easy', medium: 'badge-medium', hard: 'badge-hard' }
+  const diffColors = {
+    easy: "badge-easy",
+    medium: "badge-medium",
+    hard: "badge-hard",
+  };
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-surface)' }}>
+      <div
+        style={{
+          display: "flex",
+          minHeight: "100vh",
+          background: "var(--color-surface)",
+        }}
+      >
         <Sidebar />
-        <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <main
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <LoadingSpinner size={40} />
         </main>
       </div>
-    )
+    );
   }
 
   if (!classroom) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-surface)' }}>
+      <div
+        style={{
+          display: "flex",
+          minHeight: "100vh",
+          background: "var(--color-surface)",
+        }}
+      >
         <Sidebar />
-        <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ textAlign: 'center', color: 'var(--color-on-surface-variant)' }}>
-            <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>🔍</div>
+        <main
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            style={{
+              textAlign: "center",
+              color: "var(--color-on-surface-variant)",
+            }}
+          >
+            <div style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>🔍</div>
             <div style={{ fontWeight: 600 }}>Classroom not found</div>
-            <button className="btn btn-primary" style={{ marginTop: '1rem' }} onClick={() => navigate('/student/dashboard')}>
+            <button
+              className="btn btn-primary"
+              style={{ marginTop: "1rem" }}
+              onClick={() => navigate("/student/dashboard")}
+            >
               Back to Dashboard
             </button>
           </div>
         </main>
       </div>
-    )
+    );
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-surface)' }}>
+    <div
+      style={{
+        display: "flex",
+        minHeight: "100vh",
+        background: "var(--color-surface)",
+      }}
+    >
       <Sidebar />
 
-      <main style={{ flex: 1, overflowY: 'auto', padding: '2rem 2rem 3rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', fontSize: '0.875rem', color: 'var(--color-on-surface-variant)' }}>
-          <button className="btn btn-ghost" style={{ padding: '0.125rem 0', fontSize: '0.875rem' }} onClick={() => navigate('/student/dashboard')}>
+      <main style={{ flex: 1, overflowY: "auto", padding: "2rem 2rem 3rem" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            marginBottom: "1.5rem",
+            fontSize: "0.875rem",
+            color: "var(--color-on-surface-variant)",
+          }}
+        >
+          <button
+            className="btn btn-ghost"
+            style={{ padding: "0.125rem 0", fontSize: "0.875rem" }}
+            onClick={() => navigate("/student/dashboard")}
+          >
             My Classes
           </button>
           <span>/</span>
-          <span style={{ color: 'var(--color-on-surface)', fontWeight: 600 }}>{classroom.name}</span>
+          <span style={{ color: "var(--color-on-surface)", fontWeight: 600 }}>
+            {classroom.name}
+          </span>
         </div>
 
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-on-surface)', margin: '0 0 0.25rem' }}>
+        <div style={{ marginBottom: "1.5rem" }}>
+          <h1
+            style={{
+              fontSize: "1.5rem",
+              fontWeight: 700,
+              color: "var(--color-on-surface)",
+              margin: "0 0 0.25rem",
+            }}
+          >
             {classroom.name}
           </h1>
-          <p style={{ fontSize: '0.9rem', color: 'var(--color-on-surface-variant)', margin: 0 }}>
-            {classroom.description || `Taught by ${classroom.teacher_name || classroom.teacherName}`}
+          <p
+            style={{
+              fontSize: "0.9rem",
+              color: "var(--color-on-surface-variant)",
+              margin: 0,
+            }}
+          >
+            {classroom.description || `Taught by ${classroom.teacher_name}`}
           </p>
         </div>
 
         {questions.length === 0 ? (
-          <div className="card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-on-surface-variant)' }}>
-            <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>📭</div>
+          <div
+            className="card"
+            style={{
+              padding: "3rem",
+              textAlign: "center",
+              color: "var(--color-on-surface-variant)",
+            }}
+          >
+            <div style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>📭</div>
             <div style={{ fontWeight: 600 }}>No questions yet</div>
-            <div style={{ fontSize: '0.875rem', marginTop: '0.375rem' }}>Your teacher hasn't added any questions yet. Check back soon.</div>
+            <div style={{ fontSize: "0.875rem", marginTop: "0.375rem" }}>
+              Your teacher hasn't added any questions yet. Check back soon.
+            </div>
           </div>
         ) : (
-          <div className="card" style={{ overflow: 'hidden' }}>
-            <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--color-outline-variant)' }}>
-              <span style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--color-on-surface)' }}>
+          <div className="card" style={{ overflow: "hidden" }}>
+            <div
+              style={{
+                padding: "1rem 1.25rem",
+                borderBottom: "1px solid var(--color-outline-variant)",
+              }}
+            >
+              <span
+                style={{
+                  fontWeight: 600,
+                  fontSize: "0.9375rem",
+                  color: "var(--color-on-surface)",
+                }}
+              >
                 Questions ({questions.length})
               </span>
             </div>
             {questions.map((q, idx) => {
-              const isLast = idx === questions.length - 1
+              const isLast = idx === questions.length - 1;
               return (
                 <div
-                  key={q.ID}
-                  onClick={() => navigate(`/student/classroom/${id}/question/${q.ID}`)}
+                  key={q.id}
+                  onClick={() =>
+                    navigate(`/student/classroom/${id}/question/${q.id}`)
+                  }
                   style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '1rem 1.25rem',
-                    borderBottom: isLast ? 'none' : '1px solid var(--color-outline-variant)',
-                    gap: '1rem', flexWrap: 'wrap', cursor: 'pointer',
-                    transition: 'background 0.15s',
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "1rem 1.25rem",
+                    borderBottom: isLast
+                      ? "none"
+                      : "1px solid var(--color-outline-variant)",
+                    gap: "1rem",
+                    flexWrap: "wrap",
+                    cursor: "pointer",
+                    transition: "background 0.15s",
                   }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'var(--color-surface-low)'}
-                  onMouseLeave={e => e.currentTarget.style.background = ''}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background =
+                      "var(--color-surface-low)")
+                  }
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "")}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', minWidth: 0 }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: 'var(--radius-DEFAULT)', background: 'var(--color-surface-container)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-primary-container)', flexShrink: 0 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.875rem",
+                      minWidth: 0,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "var(--radius-DEFAULT)",
+                        background: "var(--color-surface-container)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "0.75rem",
+                        fontWeight: 700,
+                        color: "var(--color-primary-container)",
+                        flexShrink: 0,
+                      }}
+                    >
                       {idx + 1}
                     </div>
                     <div>
-                      <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--color-on-surface)', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <div
+                        style={{
+                          fontWeight: 600,
+                          fontSize: "0.9375rem",
+                          color: "var(--color-on-surface)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                          flexWrap: "wrap",
+                        }}
+                      >
                         {q.title}
-                        <span className={`badge ${diffColors[q.difficulty] || 'badge-medium'}`}>{q.difficulty}</span>
+                        <span
+                          className={`badge ${diffColors[q.difficulty] || "badge-medium"}`}
+                        >
+                          {q.difficulty}
+                        </span>
                       </div>
-                      <div style={{ fontSize: '0.8125rem', color: 'var(--color-on-surface-variant)', marginTop: '0.125rem' }}>
+                      <div
+                        style={{
+                          fontSize: "0.8125rem",
+                          color: "var(--color-on-surface-variant)",
+                          marginTop: "0.125rem",
+                        }}
+                      >
                         {q.language} • {q.constraints?.length || 0} constraints
                       </div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-                    <span className={`badge ${submittedQs.has(q.ID) ? 'badge-active' : 'badge-archived'}`}>
-                      {submittedQs.has(q.ID) ? 'Submitted' : 'Not started'}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.75rem",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <span
+                      className={`badge ${submittedQs.has(q.id) ? "badge-active" : "badge-archived"}`}
+                    >
+                      {submittedQs.has(q.id) ? "Submitted" : "Not started"}
                     </span>
-                    <span style={{ color: 'var(--color-on-surface-variant)', fontSize: '0.875rem' }}>→</span>
+                    <span
+                      style={{
+                        color: "var(--color-on-surface-variant)",
+                        fontSize: "0.875rem",
+                      }}
+                    >
+                      →
+                    </span>
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
         )}
       </main>
     </div>
-  )
+  );
 }

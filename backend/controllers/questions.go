@@ -95,7 +95,7 @@ func GetClassroomQuestions(c *gin.Context) {
 		var enrollment models.Enrollment
 		if err := initializers.DB.Where("classroom_id = ? AND student_id = ?", classroomID, userID).First(&enrollment).Error; err != nil {
 			c.JSON(http.StatusForbidden, gin.H{
-				"error": "you are not enrollexd in the class",
+				"error": "you are not enrolled in the class",
 			})
 			return
 		}

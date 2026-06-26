@@ -28,7 +28,7 @@ export default function ClassroomManagePage() {
 
         setClassroom(classroomData);
         setQuestions(questionsData);
-        setStudents(studentsData)
+        setStudents(studentsData);
       } catch (error) {
         console.error("Failed to load classroom:", error);
       } finally {
@@ -350,23 +350,23 @@ export default function ClassroomManagePage() {
               <div className="card" style={{ overflow: "hidden" }}>
                 {questions.map((q, idx) => (
                   <QuestionRow
-                    key={q.ID}
+                    key={q.id}
                     question={q}
                     isLast={idx === questions.length - 1}
                     onAnalytics={() =>
                       navigate(
-                        `/teacher/classroom/${id}/question/${q.ID}/analytics`,
+                        `/teacher/classroom/${id}/question/${q.id}/analytics`,
                       )
                     }
                     onEdit={() =>
                       navigate(
-                        `/teacher/classroom/${id}/question/${q.ID}/edit`,
+                        `/teacher/classroom/${id}/question/${q.id}/edit`,
                         {
                           state: { question: q },
                         },
                       )
                     }
-                    onDelete={() => handleDeleteQuestion(q.ID)}
+                    onDelete={() => handleDeleteQuestion(q.id)}
                   />
                 ))}
               </div>
@@ -445,7 +445,7 @@ export default function ClassroomManagePage() {
                           color: "var(--color-on-surface-variant)",
                         }}
                       >
-                        Joined{" "}{new Date(s.CreatedAt).toLocaleDateString()}
+                        Joined {new Date(s.created_at).toLocaleDateString()}
                       </div>
                     </div>
                   </div>
@@ -533,7 +533,7 @@ function QuestionRow({ question, isLast, onAnalytics, onEdit, onDelete }) {
             }}
           >
             {question.language} • Added{" "}
-            {new Date(question.createdAt).toLocaleDateString()}
+            {new Date(question.created_at).toLocaleDateString()}
           </div>
         </div>
       </div>

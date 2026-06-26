@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -30,12 +31,15 @@ func (s StringSlice) Value() (driver.Value, error) {
 }
 
 type Question struct {
-	gorm.Model
-	ClassroomID  uint        `gorm:"not null;index" json:"classroom_id"`
-	Title        string      `gorm:"not null" json:"title"`
-	Description  string      `gorm:"type:text" json:"description"`
-	Difficulty   string      `json:"difficulty"`
-	Language     string      `json:"language"`
-	Constraints  StringSlice `gorm:"type:json" json:"constraints"`
-	TemplateCode string      `gorm:"type:text" json:"template_code"`
+	ID           uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
+	ClassroomID  uint           `gorm:"not null;index" json:"classroom_id"`
+	Title        string         `gorm:"not null" json:"title"`
+	Description  string         `gorm:"type:text" json:"description"`
+	Difficulty   string         `json:"difficulty"`
+	Language     string         `json:"language"`
+	Constraints  StringSlice    `gorm:"type:json" json:"constraints"`
+	TemplateCode string         `gorm:"type:text" json:"template_code"`
 }

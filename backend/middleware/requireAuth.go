@@ -14,7 +14,7 @@ func RequireAuth() gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "Authorizarion header required",
+				"error": "Authorization header required",
 			})
 			return
 		}

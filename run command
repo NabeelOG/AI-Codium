@@ -1,0 +1,20 @@
+# 1. Start ML service
+cd /home/nabeel/Projects/AI-Codium/ml-service && ./venv/bin/python app.py &
+
+# 2. Start backend
+cd /home/nabeel/Projects/AI-Codium/backend && go run main.go &
+
+# 3. Start frontend
+cd /home/nabeel/Projects/AI-Codium/frontend && npx vite
+
+
+
+
+
+
+# Windows (PowerShell)
+python -m venv venv
+.\venv\Scripts\pip install -r requirements.txt
+python seed_data.py
+python train_model.py
+python app.py

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -56,14 +57,19 @@ func SubmitCode(c *gin.Context) {
 		feedback = "Could not generate feedback at this time."
 	}
 
+	// Run ML classification (best-effort, never blocks)
+	category, confidence := classifyCode(body.Code, question.Language, "")
+
 	// Create submission
 	submission := models.Submission{
-		QuestionID:  question.ID,
-		ClassroomID: question.ClassroomID,
-		StudentID:   studentID,
-		StudentName: student.Name,
-		Code:        body.Code,
-		Feedback:    feedback,
+		QuestionID:      question.ID,
+		ClassroomID:     question.ClassroomID,
+		StudentID:       studentID,
+		StudentName:     student.Name,
+		Code:            body.Code,
+		Feedback:        feedback,
+		ErrorCategory:   category,
+		ErrorConfidence: confidence,
 	}
 	initializers.DB.Create(&submission)
 
@@ -85,6 +91,108 @@ func SubmitCode(c *gin.Context) {
 	})
 }
 
+// checkSyntax performs basic syntax validation before calling the ML service.
+// For JS/TS: counts braces, parens, brackets and checks for unmatched quotes.
+// For Python: checks for missing colons and unbalanced quotes.
+func checkSyntax(code, language string) (string, float64) {
+	lang := strings.ToLower(language)
+
+	if lang == "javascript" || lang == "typescript" {
+		openBraces := strings.Count(code, "{")
+		closeBraces := strings.Count(code, "}")
+		openParens := strings.Count(code, "(")
+		closeParens := strings.Count(code, ")")
+		openBrackets := strings.Count(code, "[")
+		closeBrackets := strings.Count(code, "]")
+
+		if openBraces != closeBraces || openParens != closeParens || openBrackets != closeBrackets {
+			return "Syntax Error", 0.95
+		}
+
+		// Check for unmatched single/double quote pairs (simple heuristic)
+		for _, q := range []string{"'", "\"", "`"} {
+			if strings.Count(code, q)%2 != 0 {
+				return "Syntax Error", 0.95
+			}
+		}
+	}
+
+	if lang == "python" {
+		// Check for missing colon after def/if/for/while/class/except/else/elif/try
+		lines := strings.Split(code, "\n")
+		for _, line := range lines {
+			trimmed := strings.TrimSpace(line)
+			if strings.HasPrefix(trimmed, "def ") || strings.HasPrefix(trimmed, "if ") ||
+				strings.HasPrefix(trimmed, "for ") || strings.HasPrefix(trimmed, "while ") ||
+				strings.HasPrefix(trimmed, "class ") || strings.HasPrefix(trimmed, "except") ||
+				strings.HasPrefix(trimmed, "else") || strings.HasPrefix(trimmed, "elif ") ||
+				strings.HasPrefix(trimmed, "try") {
+				if !strings.HasSuffix(strings.TrimSpace(trimmed), ":") {
+					return "Syntax Error", 0.95
+				}
+			}
+		}
+
+		// Check for unbalanced quotes
+		for _, q := range []string{"'", "\""} {
+			if strings.Count(code, q)%2 != 0 {
+				return "Syntax Error", 0.95
+			}
+		}
+	}
+
+	return "", 0.0
+}
+
+// classifyCode calls the ML service to classify the error category.
+// It first runs checkSyntax for fast-path syntax detection.
+// On any failure (network error, timeout, bad response), returns empty strings.
+func classifyCode(code, language, stderr string) (string, float64) {
+	// Fast-path: local syntax check first
+	if category, confidence := checkSyntax(code, language); category != "" {
+		return category, confidence
+	}
+
+	// Call ML service
+	mlURL := os.Getenv("ML_SERVICE_URL")
+	if mlURL == "" {
+		mlURL = "http://localhost:8081"
+	}
+
+	reqBody := map[string]string{
+		"code":     code,
+		"stderr":   stderr,
+		"language": language,
+	}
+	jsonBody, err := json.Marshal(reqBody)
+	if err != nil {
+		return "", 0.0
+	}
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	req, err := http.NewRequest("POST", mlURL+"/classify", bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return "", 0.0
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", 0.0
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		Category   string  `json:"category"`
+		Confidence float64 `json:"confidence"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", 0.0
+	}
+
+	return result.Category, result.Confidence
+}
+
 func GetLLMFeedback(question models.Question, code string) (string, error) {
 	apiKey := os.Getenv("DEEPSEEK_API_KEY")
 	if apiKey == "" {
@@ -93,22 +201,22 @@ func GetLLMFeedback(question models.Question, code string) (string, error) {
 
 	prompt := fmt.Sprintf(`You are a coding instructor. Analyze this student's code solution and provide constructive feedback.
 
-	Question: %s
-	Description: %s
+		Question: %s
+		Description: %s
 
-	Constraints: %v
+		Constraints: %v
 
-	Student's Code:
-	%s
+		Student's Code:
+		%s
 
-	Provide feedback in this JSON format:
-	{
-	  "status": "passed" or "error" or "needs_improvement",
-	  "suggestions": "Specific suggestions to improve the code",
-	  "issues": "Any errors or issues found"
-	}
+		Provide feedback in this JSON format:
+		{
+		  "status": "passed" or "error" or "needs_improvement",
+		  "suggestions": "Specific suggestions to improve the code",
+		  "issues": "Any errors or issues found"
+		}
 
-	Keep it concise and helpful.`, question.Title, question.Description, question.Constraints, code)
+		Keep it concise and helpful.`, question.Title, question.Description, question.Constraints, code)
 
 	// Call DeepSeek API
 	resp, err := callDeepSeek(apiKey, prompt)
@@ -176,100 +284,100 @@ func callDeepSeek(apiKey, prompt string) (string, error) {
 }
 
 func GetStudentSubmissions(c *gin.Context) {
-    questionID := c.Param("id")
-    studentID := c.GetUint("userID")
-    studentRole := c.GetString("role")
+	questionID := c.Param("id")
+	studentID := c.GetUint("userID")
+	studentRole := c.GetString("role")
 
-    if studentRole != "student" {
-        c.JSON(http.StatusForbidden, gin.H{"error": "Only students can view their submissions"})
-        return
-    }
+	if studentRole != "student" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only students can view their submissions"})
+		return
+	}
 
-    var submissions []models.Submission
-    if err := initializers.DB.Where("question_id = ? AND student_id = ?", questionID, studentID).
-        Order("created_at DESC").
-        Find(&submissions).Error; err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch submissions"})
-        return
-    }
+	var submissions []models.Submission
+	if err := initializers.DB.Where("question_id = ? AND student_id = ?", questionID, studentID).
+		Order("created_at DESC").
+		Find(&submissions).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch submissions"})
+		return
+	}
 
-    c.JSON(http.StatusOK, submissions)
+	c.JSON(http.StatusOK, submissions)
 }
 
 func GetMySubmission(c *gin.Context) {
-    questionID := c.Param("id")
-    studentID := c.GetUint("userID")
+	questionID := c.Param("id")
+	studentID := c.GetUint("userID")
 
-    var submission models.Submission
+	var submission models.Submission
 	result := initializers.DB.Where("question_id = ? AND student_id = ?", questionID, studentID).
 		Order("created_at DESC").
 		First(&submission)
 
-    if result.Error != nil {
-        c.JSON(http.StatusOK, gin.H{"submitted": false})
-        return
-    }
+	if result.Error != nil {
+		c.JSON(http.StatusOK, gin.H{"submitted": false})
+		return
+	}
 
-    c.JSON(http.StatusOK, gin.H{
-        "submitted":  true,
-        "submission": submission,
-    })
+	c.JSON(http.StatusOK, gin.H{
+		"submitted":  true,
+		"submission": submission,
+	})
 }
 
 func GetClassroomMySubmissions(c *gin.Context) {
-    classroomID := c.Param("id")
-    studentID := c.GetUint("userID")
-    studentRole := c.GetString("role")
+	classroomID := c.Param("id")
+	studentID := c.GetUint("userID")
+	studentRole := c.GetString("role")
 
-    if studentRole != "student" {
-        c.JSON(http.StatusForbidden, gin.H{"error": "Only students can view their submissions"})
-        return
-    }
+	if studentRole != "student" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only students can view their submissions"})
+		return
+	}
 
-    var submissions []models.Submission
-    if err := initializers.DB.Where("classroom_id = ? AND student_id = ?", classroomID, studentID).
-        Find(&submissions).Error; err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch submissions"})
-        return
-    }
+	var submissions []models.Submission
+	if err := initializers.DB.Where("classroom_id = ? AND student_id = ?", classroomID, studentID).
+		Find(&submissions).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch submissions"})
+		return
+	}
 
-    c.JSON(http.StatusOK, submissions)
+	c.JSON(http.StatusOK, submissions)
 }
 
 func GetQuestionSubmissions(c *gin.Context) {
-    questionID := c.Param("id")
-    userID := c.GetUint("userID")
-    userRole := c.GetString("role")
+	questionID := c.Param("id")
+	userID := c.GetUint("userID")
+	userRole := c.GetString("role")
 
-    if userRole != "teacher" {
-        c.JSON(http.StatusForbidden, gin.H{"error": "Only teachers can view all submissions"})
-        return
-    }
+	if userRole != "teacher" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only teachers can view all submissions"})
+		return
+	}
 
-    var question models.Question
-    if err := initializers.DB.First(&question, questionID).Error; err != nil {
-        c.JSON(http.StatusNotFound, gin.H{"error": "Question not found"})
-        return
-    }
+	var question models.Question
+	if err := initializers.DB.First(&question, questionID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Question not found"})
+		return
+	}
 
-    var classroom models.Classroom
-    if err := initializers.DB.First(&classroom, question.ClassroomID).Error; err != nil {
-        c.JSON(http.StatusNotFound, gin.H{"error": "Classroom not found"})
-        return
-    }
+	var classroom models.Classroom
+	if err := initializers.DB.First(&classroom, question.ClassroomID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Classroom not found"})
+		return
+	}
 
-    if classroom.TeacherID != userID {
-        c.JSON(http.StatusForbidden, gin.H{"error": "You dont own this classroom"})
-        return
-    }
+	if classroom.TeacherID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You dont own this classroom"})
+		return
+	}
 
-    var submissions []models.Submission
-    if err := initializers.DB.Where("question_id = ?", questionID).
-        Order("created_at DESC").
-        Find(&submissions).Error; err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch submissions"})
-        return
-    }
+	var submissions []models.Submission
+	if err := initializers.DB.Where("question_id = ?", questionID).
+		Order("created_at DESC").
+		Find(&submissions).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch submissions"})
+		return
+	}
 
-    c.JSON(http.StatusOK, submissions)
+	c.JSON(http.StatusOK, submissions)
 }
