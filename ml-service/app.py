@@ -7,6 +7,7 @@ import os
 
 import joblib
 from flask import Flask, jsonify, request
+from train_model import FeatureUnionVectorizer  # needed for joblib deserialization
 
 BASE_DIR = os.path.dirname(__file__)
 MODEL_PATH = os.path.join(BASE_DIR, "model.joblib")
@@ -46,7 +47,7 @@ def classify():
         return jsonify({"error": "No code or stderr provided"}), 400
 
     # Combine text the same way training did
-    text = (code + "\n" + stderr).strip()
+    text = code + "\n" + stderr + "\nlang:" + language
 
     # Vectorize and predict
     vec = vectorizer.transform([text])
