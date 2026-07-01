@@ -1,20 +1,128 @@
-# 1. Start ML service
-cd /home/nabeel/Projects/AI-Codium/ml-service && ./venv/bin/python app.py &
+# ==========================================================================
+#  INTEL CODE — Setup & Run Guide  (WSL / Linux)
+# ==========================================================================
+#
+#  PREREQUISITES:
+#    • Go 1.26+    (brew install go  or  apt install golang)
+#    • Python 3.12+ (with venv —  apt install python3.12-venv)
+#    • Node.js 22+  (fnm use 22  or  nvm use 22)
+#    • PostgreSQL   (docker run postgres  or  apt install postgresql)
+#    • DeepSeek API key → put in backend/.env  (DeepSeek sign‑up, free tier)
+#
+#  Before you start, create the database:
+#    createdb codeclass
+#    (or use the default connection string below)
+# ==========================================================================
 
-# 2. Start backend
-cd /home/nabeel/Projects/AI-Codium/backend && go run main.go &
+# ---- 1. Backend .env -----------------------------------------------
+# Create ml-service/backend/.env with these 5 lines:
+cat > backend/.env << 'EOF'
+PORT=8080
+DB_URL=postgresql://postgres:password@localhost:5432/codeclass?sslmode=disable
+JWT_SECRET=change_me_to_a_random_string
+DEEPSEEK_API_KEY=sk-your-key-here
+ML_SERVICE_URL=http://localhost:8081
+EOF
 
-# 3. Start frontend
-cd /home/nabeel/Projects/AI-Codium/frontend && npx vite
+# ---- 2. ML Service setup -------------------------------------------
+cd ml-service
 
+# Create venv & activate
+python3 -m venv .venv
+source .venv/bin/activate
 
+# Install torch CPU-only (MUCH smaller than CUDA — ~180MB vs 2.5GB)
+pip install torch --index-url https://download.pytorch.org/whl/cpu
 
+# Install remaining deps (first run downloads CodeBERT model ~500MB)
+pip install -r requirements.txt
 
-
-
-# Windows (PowerShell)
-python -m venv venv
-.\venv\Scripts\pip install -r requirements.txt
+# Generate training data & train classifier
 python seed_data.py
-python train_model.py
-python app.py
+python train_model.py           # prints accuracy report — aim for 80%+
+
+# ---- 3. Run everything (3 terminals) -------------------------------
+# Terminal 1 — ML Service (port 8081)
+cd ml-service && source .venv/bin/activate && python app.py
+
+# Terminal 2 — Backend (port 8080)
+cd backend && go run main.go
+
+# Terminal 3 — Frontend (port 5173)
+cd frontend && npm install && npm run dev
+
+
+# ==========================================================================
+#  WINDOWS — First-time setup for your friend
+# ==========================================================================
+#
+#  PREREQUISITES (install BEFORE cloning):
+#    1. Python 3.12+   →  https://www.python.org/downloads/
+#       (tick "Add Python to PATH" during install)
+#    2. Node.js 22+     →  https://nodejs.org  (LTS)
+#    3. Go 1.26+        →  https://go.dev/dl/
+#    4. PostgreSQL 16+  →  https://www.postgresql.org/download/windows/
+#       During install: set password = "password", port = 5432
+#       After install: open pgAdmin → create database "codeclass"
+#    5. DeepSeek API key →  https://platform.deepseek.com  (free sign-up)
+#       Put key in backend\.env (step 1 below)
+#    6. Git              →  https://git-scm.com/download/win
+# ==========================================================================
+#
+#  ---- 1. Clone the project -----------------------------------------
+#  git clone <repo-url>
+#  cd Intel_Code_v2
+#
+#  ---- 2. Create backend\.env ---------------------------------------
+#  Create a new file  backend\.env  with these lines (use Notepad):
+#
+#    PORT=8080
+#    DB_URL=postgresql://postgres:password@localhost:5432/codeclass?sslmode=disable
+#    JWT_SECRET=any_random_string_here
+#    DEEPSEEK_API_KEY=sk-your-real-key-here
+#    ML_SERVICE_URL=http://localhost:8081
+#
+#  ---- 3. ML Service setup (Command Prompt / PowerShell) ------------
+#  cd ml-service
+#
+#  python -m venv venv
+#  .\venv\Scripts\activate
+#
+#  REM Install torch CPU-only (much smaller download)
+#  pip install torch --index-url https://download.pytorch.org/whl/cpu
+#
+#  REM Install remaining dependencies (first run downloads CodeBERT ~500MB)
+#  pip install -r requirements.txt
+#
+#  REM Generate training data & train
+#  python seed_data.py
+#  python train_model.py
+#
+#  ---- 4. Run everything (3 terminals, each from project root) ------
+#
+#  Terminal 1 — ML Service (port 8081):
+#    cd ml-service
+#    .\venv\Scripts\activate
+#    python app.py
+#
+#  Terminal 2 — Backend (port 8080):
+#    cd backend
+#    go run main.go
+#
+#  Terminal 3 — Frontend (port 5173):
+#    cd frontend
+#    npm install
+#    npm run dev
+#
+#  ---- 5. Open in browser -------------------------------------------
+#  http://localhost:5173
+#  Register a teacher account, then a student account.
+#
+#  ---- Troubleshooting ----------------------------------------------
+#  • "pip not found"         → make sure Python is in PATH, try "py -m pip"
+#  • "go not found"          → reinstall Go, restart terminal
+#  • Frontend can't connect  → make sure both backend (8080) AND ML (8081)
+#                              are running
+#  • "connect to PostgreSQL" → check PostgreSQL is running (pgAdmin / Services)
+#  • torch huge download     → you missed step 3 — MUST use CPU index
+#  • CodeBERT 500MB download → happens once on first train_model.py run

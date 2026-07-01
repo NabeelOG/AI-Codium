@@ -39,6 +39,28 @@ SYNTAX_ERRORS = [
     ("arr.map(x => x * 2\n.filter(x > 3)", "", "javascript"),
     ("const fn = () => {\n  return {}\n  .method()", "", "javascript"),
     ("let x = 5\nlet y = x +\nconsole.log(y)", "", "javascript"),
+    # --- additional Python syntax errors ---
+    ("def add(a, b)\n    return a + b", "", "python"),
+    ("while True\n    pass", "", "python"),
+    ("x = (1, 2, 3\nprint(x)", "", "python"),
+    ('print "hello world"', "", "python"),
+    ("class Animal\n    pass", "", "python"),
+    ("if x == 5\n    print(x)", "", "python"),
+    ("def greet(name):\nprint(name)", "", "python"),
+    ('d = {"a": 1, "b": 2\nprint(d)', "", "python"),
+    ("nums = [1, 2, 3]]\nprint(nums)", "", "python"),
+    ("return total\n", "", "python"),
+    # --- additional JavaScript syntax errors ---
+    ("function add(a, b) {\n  return a + b\n", "", "javascript"),
+    ("const arr = [1, 2, 3];;;\narr.map(x =>", "", "javascript"),
+    ("if (x === 5 {\n  console.log(x);\n}", "", "javascript"),
+    ("const obj = { a: 1, b: 2;\nconsole.log(obj)", "", "javascript"),
+    ("for (let i = 0 i < 10; i++) {\n  console.log(i);\n}", "", "javascript"),
+    ("function () {\n  return 1;\n}", "", "javascript"),
+    ("let x = ;\nconsole.log(x)", "", "javascript"),
+    ("console.log('hello);", "", "javascript"),
+    ("function multiply(a, b) {{\n  return a * b;\n}", "", "javascript"),
+    ("const sum = (a, b) =>\n  return a + b;", "", "javascript"),
 ]
 
 RUNTIME_ERRORS = [
@@ -118,6 +140,80 @@ RUNTIME_ERRORS = [
     (
         "window.nonExistent.method()",
         "TypeError: Cannot read properties of undefined",
+        "javascript",
+    ),
+    # --- additional Python runtime errors ---
+    ("lst = []\nprint(lst.pop())", "IndexError: pop from empty list", "python"),
+    ("total = 10\nprint(total / 0)", "ZeroDivisionError: division by zero", "python"),
+    ("print(len(42))", "TypeError: object of type 'int' has no len()", "python"),
+    (
+        "nums = [1, 2, 3]\nnums.remove(9)",
+        "ValueError: list.remove(x): x not in list",
+        "python",
+    ),
+    (
+        "s = 'hello'\ns[0] = 'H'",
+        "TypeError: 'str' object does not support item assignment",
+        "python",
+    ),
+    ("counts = {}\ncounts['x'] += 1", "KeyError: 'x'", "python"),
+    (
+        "print(float('not a number'))",
+        "ValueError: could not convert string to float: 'not a number'",
+        "python",
+    ),
+    (
+        "import os\nos.does_not_exist()",
+        "AttributeError: module 'os' has no attribute 'does_not_exist'",
+        "python",
+    ),
+    (
+        "a = [1, 2, 3]\nb = a + 5",
+        'TypeError: can only concatenate list (not "int") to list',
+        "python",
+    ),
+    (
+        "print(undefined_variable)",
+        "NameError: name 'undefined_variable' is not defined",
+        "python",
+    ),
+    # --- additional JavaScript runtime errors ---
+    (
+        "const x = null;\nconsole.log(x.length)",
+        "TypeError: Cannot read properties of null (reading 'length')",
+        "javascript",
+    ),
+    (
+        "console.log(missingVar + 1)",
+        "ReferenceError: missingVar is not defined",
+        "javascript",
+    ),
+    (
+        "const obj = {};\nconsole.log(obj.a.b)",
+        "TypeError: Cannot read properties of undefined (reading 'b')",
+        "javascript",
+    ),
+    (
+        "const empty = [];\nempty.reduce((a, b) => a + b)",
+        "TypeError: Reduce of empty array with no initial value",
+        "javascript",
+    ),
+    (
+        "const PI = 3.14;\nPI = 3.15;",
+        "TypeError: Assignment to constant variable.",
+        "javascript",
+    ),
+    ("const f = null;\nf();", "TypeError: f is not a function", "javascript"),
+    (
+        "JSON.parse('{ bad json }')",
+        "SyntaxError: Unexpected token b in JSON at position 2",
+        "javascript",
+    ),
+    ("const n = 5;\nn.map(x => x)", "TypeError: n.map is not a function", "javascript"),
+    ("decodeURIComponent('%')", "URIError: URI malformed", "javascript"),
+    (
+        "const arr = [1, 2];\narr[5].toFixed(2)",
+        "TypeError: Cannot read properties of undefined (reading 'toFixed')",
         "javascript",
     ),
 ]
@@ -213,6 +309,60 @@ LOGICAL_ERRORS = [
         "",
         "javascript",
     ),
+    # --- additional Python logical errors ---
+    ("def average(nums):\n    return sum(nums) / len(nums) + 1", "", "python"),
+    ("def is_positive(n):\n    return n >= 0", "", "python"),
+    (
+        "def max_of_two(a, b):\n    if a > b:\n        return b\n    return a",
+        "",
+        "python",
+    ),
+    ("def square_all(nums):\n    return [n * 2 for n in nums]", "", "python"),
+    (
+        "def sum_list(lst):\n    total = 1\n    for x in lst:\n        total += x\n    return total",
+        "",
+        "python",
+    ),
+    ("def to_celsius(f):\n    return (f - 32) * 5 / 9 + 1", "", "python"),
+    (
+        "def double_values(lst):\n    for x in lst:\n        x *= 2\n    return lst",
+        "",
+        "python",
+    ),
+    (
+        "def absolute(n):\n    if n > 0:\n        return n\n    return n",
+        "",
+        "python",
+    ),
+    (
+        "def last_index(arr, target):\n    for i in range(len(arr)):\n        if arr[i] == target:\n            return i\n    return 0",
+        "",
+        "python",
+    ),
+    ("def average_grade(grades):\n    return sum(grades) // len(grades)", "", "python"),
+    # --- additional JavaScript logical errors ---
+    (
+        "function average(nums) {\n  return nums.reduce((a, b) => a + b, 0) / nums.length + 1;\n}",
+        "",
+        "javascript",
+    ),
+    ("function isPositive(n) {\n  return n >= 0;\n}", "", "javascript"),
+    ("function maxOfTwo(a, b) {\n  return a > b ? b : a;\n}", "", "javascript"),
+    (
+        "function sumList(arr) {\n  let total = 1;\n  for (const x of arr) total += x;\n  return total;\n}",
+        "",
+        "javascript",
+    ),
+    ("function squareAll(nums) {\n  return nums.map(n => n * 2);\n}", "", "javascript"),
+    ("function lastElement(arr) {\n  return arr[arr.length];\n}", "", "javascript"),
+    ("function toCelsius(f) {\n  return (f - 32) * 5 / 9 + 1;\n}", "", "javascript"),
+    (
+        "function countdown(n) {\n  while (n > 0) {\n    console.log(n);\n  }\n}",
+        "",
+        "javascript",
+    ),
+    ("function greaterThanTen(n) {\n  return n > 100;\n}", "", "javascript"),
+    ("function firstHalf(arr) {\n  return arr.slice(0, arr.length);\n}", "", "javascript"),
 ]
 
 INEFFICIENT_SOLUTIONS = [
@@ -315,6 +465,96 @@ INEFFICIENT_SOLUTIONS = [
     ),
     (
         'function longestCommonPrefix(strs) {\n  if (!strs.length) return "";\n  let prefix = strs[0];\n  for (let s of strs.slice(1)) {\n    while (!s.startsWith(prefix)) prefix = prefix.slice(0, -1);\n  }\n  return prefix;\n}',
+        "",
+        "javascript",
+    ),
+    # --- additional Python inefficient solutions ---
+    (
+        "def has_pair_sum(nums, target):\n    for i in range(len(nums)):\n        for j in range(len(nums)):\n            if i != j and nums[i] + nums[j] == target:\n                return True\n    return False",
+        "",
+        "python",
+    ),
+    (
+        "def unique(arr):\n    result = []\n    for x in arr:\n        if x not in result:\n            result.append(x)\n    return result",
+        "",
+        "python",
+    ),
+    ("def slow_max(arr):\n    return sorted(arr)[-1]", "", "python"),
+    (
+        "def common_elements(a, b):\n    result = []\n    for x in a:\n        for y in b:\n            if x == y and x not in result:\n                result.append(x)\n    return result",
+        "",
+        "python",
+    ),
+    (
+        "def power(base, exp):\n    result = 1\n    for _ in range(exp):\n        result *= base\n    return result",
+        "",
+        "python",
+    ),
+    (
+        "def reverse_list(arr):\n    result = []\n    for i in range(len(arr)):\n        result = [arr[i]] + result\n    return result",
+        "",
+        "python",
+    ),
+    (
+        "def nth_fib(n):\n    if n < 2:\n        return n\n    return nth_fib(n - 1) + nth_fib(n - 2)",
+        "",
+        "python",
+    ),
+    ("def count_each(arr):\n    return [arr.count(x) for x in arr]", "", "python"),
+    (
+        "def dedupe(arr):\n    result = []\n    for i in range(len(arr)):\n        found = False\n        for j in range(len(result)):\n            if arr[i] == result[j]:\n                found = True\n        if not found:\n            result.append(arr[i])\n    return result",
+        "",
+        "python",
+    ),
+    ("def sum_of_squares(n):\n    return sum([i * i for i in range(n)])", "", "python"),
+    # --- additional JavaScript inefficient solutions ---
+    (
+        "function hasPairSum(nums, target) {\n  for (let i = 0; i < nums.length; i++) {\n    for (let j = 0; j < nums.length; j++) {\n      if (i !== j && nums[i] + nums[j] === target) return true;\n    }\n  }\n  return false;\n}",
+        "",
+        "javascript",
+    ),
+    (
+        "function unique(arr) {\n  const result = [];\n  for (const x of arr) {\n    if (!result.includes(x)) result.push(x);\n  }\n  return result;\n}",
+        "",
+        "javascript",
+    ),
+    (
+        "function slowMax(arr) {\n  return [...arr].sort((a, b) => a - b).pop();\n}",
+        "",
+        "javascript",
+    ),
+    (
+        "function commonElements(a, b) {\n  const result = [];\n  for (const x of a) {\n    for (const y of b) {\n      if (x === y && !result.includes(x)) result.push(x);\n    }\n  }\n  return result;\n}",
+        "",
+        "javascript",
+    ),
+    (
+        "function power(base, exp) {\n  let result = 1;\n  for (let i = 0; i < exp; i++) result *= base;\n  return result;\n}",
+        "",
+        "javascript",
+    ),
+    (
+        "function reverseArr(arr) {\n  let result = [];\n  for (let i = 0; i < arr.length; i++) result = [arr[i], ...result];\n  return result;\n}",
+        "",
+        "javascript",
+    ),
+    (
+        "function nthFib(n) {\n  if (n < 2) return n;\n  return nthFib(n - 1) + nthFib(n - 2);\n}",
+        "",
+        "javascript",
+    ),
+    (
+        "function countEach(arr) {\n  return arr.map(x => arr.filter(y => y === x).length);\n}",
+        "",
+        "javascript",
+    ),
+    (
+        "function dedupe(arr) {\n  const result = [];\n  for (let i = 0; i < arr.length; i++) {\n    let found = false;\n    for (let j = 0; j < result.length; j++) {\n      if (arr[i] === result[j]) found = true;\n    }\n    if (!found) result.push(arr[i]);\n  }\n  return result;\n}",
+        "",
+        "javascript",
+    ),
+    (
+        "function sumOfSquares(n) {\n  return Array.from({ length: n }, (_, i) => i * i).reduce((a, b) => a + b, 0);\n}",
         "",
         "javascript",
     ),
@@ -501,6 +741,19 @@ CORRECT_SOLUTIONS = [
         "",
         "typescript",
     ),
+    # --- additional correct solutions (counterparts to the logical errors) ---
+    ("def average(nums):\n    return sum(nums) / len(nums)", "", "python"),
+    ("def is_positive(n):\n    return n > 0", "", "python"),
+    ("def max_of_two(a, b):\n    return a if a > b else b", "", "python"),
+    ("def square_all(nums):\n    return [n ** 2 for n in nums]", "", "python"),
+    ("def to_celsius(f):\n    return (f - 32) * 5 / 9", "", "python"),
+    (
+        "function average(nums) {\n  return nums.reduce((a, b) => a + b, 0) / nums.length;\n}",
+        "",
+        "javascript",
+    ),
+    ("function maxOfTwo(a, b) {\n  return a > b ? a : b;\n}", "", "javascript"),
+    ("function lastElement(arr) {\n  return arr[arr.length - 1];\n}", "", "javascript"),
 ]
 
 

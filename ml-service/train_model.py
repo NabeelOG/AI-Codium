@@ -1,56 +1,39 @@
 """
 Train an error-category classifier on the synthetic training dataset.
-Uses a feature union of word + char n-grams with calibrated linear SVM.
-Saves the trained model and vectorizer for serving.
+
+Features come from CodeBERT embeddings (see embed.py): each snippet is
+turned into a 768-dim semantic vector, then a logistic-regression head is
+trained on top. The CodeBERT model itself is not modified (frozen feature
+extractor), so training is fast and runs on CPU.
+
+Saves only the small classifier (model.joblib). CodeBERT is reloaded from
+the local HuggingFace cache at serving time.
 """
 
 import os
 
 import joblib
 import pandas as pd
-from scipy.sparse import hstack
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import SGDClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
+
+from embed import embed
 
 BASE_DIR = os.path.dirname(__file__)
 DATA_PATH = os.path.join(BASE_DIR, "training_data.csv")
 MODEL_PATH = os.path.join(BASE_DIR, "model.joblib")
-VEC_PATH = os.path.join(BASE_DIR, "vectorizer.joblib")
 
 
-class FeatureUnionVectorizer:
-    """Wraps word + char TfidfVectorizers into one transformer."""
-
-    def __init__(self):
-        self.word_vec = TfidfVectorizer(
-            max_features=2000,
-            ngram_range=(1, 3),
-            analyzer="word",
-            lowercase=True,
-            sublinear_tf=True,
-        )
-        self.char_vec = TfidfVectorizer(
-            max_features=5000,
-            ngram_range=(2, 5),
-            analyzer="char_wb",
-            lowercase=True,
-            sublinear_tf=True,
-        )
-
-    def fit(self, texts, y=None):
-        self.word_vec.fit(texts)
-        self.char_vec.fit(texts)
-        return self
-
-    def transform(self, texts):
-        w = self.word_vec.transform(texts)
-        c = self.char_vec.transform(texts)
-        return hstack([w, c])
-
-    def fit_transform(self, texts, y=None):
-        return self.fit(texts, y).transform(texts)
+def build_text(code, stderr, language):
+    """Combine the fields into one string. MUST match app.py exactly."""
+    return (
+        str(code or "")
+        + "\n"
+        + str(stderr or "")
+        + "\nlang:"
+        + str(language or "")
+    )
 
 
 def main():
@@ -63,49 +46,36 @@ def main():
     print(f"Loaded {len(df)} examples")
     print(f"Label distribution:\n{df['label'].value_counts()}\n")
 
-    # Combine code + stderr + language
-    df["text"] = (
-        df["code"].fillna("")
-        + "\n"
-        + df["stderr"].fillna("")
-        + "\nlang:"
-        + df["language"].fillna("")
+    df["text"] = df.apply(
+        lambda r: build_text(r["code"], r["stderr"], r["language"]), axis=1
     )
 
-    X = df["text"]
-    y = df["label"]
+    print("Embedding training data with CodeBERT (this can take a minute)...")
+    X = embed(df["text"].tolist())
+    y = df["label"].values
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.25, random_state=42, stratify=y
     )
 
-    vectorizer = FeatureUnionVectorizer()
-    X_train_vec = vectorizer.fit_transform(X_train)
-    X_test_vec = vectorizer.transform(X_test)
-
-    # Calibrated linear SVM: fast, small, generalizes well
-    clf = SGDClassifier(
-        loss="log_loss",
-        penalty="elasticnet",
-        alpha=0.001,
-        l1_ratio=0.3,
-        max_iter=3000,
-        tol=1e-4,
-        random_state=42,
+    # Logistic regression on top of the frozen CodeBERT embeddings.
+    # Gives well-calibrated predict_proba (used as confidence) and is
+    # trivial to explain.
+    clf = LogisticRegression(
+        max_iter=1000,
         class_weight="balanced",
+        C=1.0,
     )
-    clf.fit(X_train_vec, y_train)
+    clf.fit(X_train, y_train)
 
-    y_pred = clf.predict(X_test_vec)
+    y_pred = clf.predict(X_test)
     print("=" * 60)
     print("Classification Report (Test Set)")
     print("=" * 60)
     print(classification_report(y_test, y_pred))
 
     joblib.dump(clf, MODEL_PATH)
-    joblib.dump(vectorizer, VEC_PATH)
     print(f"Model saved -> {MODEL_PATH}")
-    print(f"Vectorizer saved -> {VEC_PATH}")
 
 
 if __name__ == "__main__":

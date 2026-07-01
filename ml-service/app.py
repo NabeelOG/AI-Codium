@@ -1,29 +1,42 @@
 """
 Flask microservice for code error classification.
 POST /classify — returns category + confidence.
+
+Features are CodeBERT embeddings (see embed.py); a logistic-regression head
+(model.joblib) maps them to an error category. When the model is not
+confident enough, the category is reported as "Uncertain" instead of a
+misleading label.
 """
 
 import os
 
 import joblib
 from flask import Flask, jsonify, request
-from train_model import FeatureUnionVectorizer  # needed for joblib deserialization
+
+from embed import embed
 
 BASE_DIR = os.path.dirname(__file__)
 MODEL_PATH = os.path.join(BASE_DIR, "model.joblib")
-VEC_PATH = os.path.join(BASE_DIR, "vectorizer.joblib")
+
+# Below this confidence we don't trust the prediction — report "Uncertain"
+# rather than a misleading label. The semantic classes (Logical / Inefficient
+# / Correct) genuinely overlap, so honest abstention is better than guessing.
+CONFIDENCE_THRESHOLD = 0.5
 
 app = Flask(__name__)
 
-# Load model at startup
-if os.path.exists(MODEL_PATH) and os.path.exists(VEC_PATH):
+# Load classifier at startup. CodeBERT itself loads lazily on first embed().
+if os.path.exists(MODEL_PATH):
     model = joblib.load(MODEL_PATH)
-    vectorizer = joblib.load(VEC_PATH)
     print(f"Model loaded from {MODEL_PATH}")
 else:
     model = None
-    vectorizer = None
     print("WARNING: Model not found. Run: python train_model.py")
+
+
+def build_text(code, stderr, language):
+    """Combine the fields into one string. MUST match train_model.py exactly."""
+    return code + "\n" + stderr + "\nlang:" + language
 
 
 @app.route("/health")
@@ -35,29 +48,31 @@ def health():
 
 @app.route("/classify", methods=["POST"])
 def classify():
-    if model is None or vectorizer is None:
+    if model is None:
         return jsonify({"error": "Model not loaded"}), 503
 
     data = request.get_json(silent=True) or {}
-    code = data.get("code", "")
-    stderr = data.get("stderr", "")
-    language = data.get("language", "")
+    code = data.get("code", "") or ""
+    stderr = data.get("stderr", "") or ""
+    language = data.get("language", "") or ""
 
     if not code and not stderr:
         return jsonify({"error": "No code or stderr provided"}), 400
 
-    # Combine text the same way training did
-    text = code + "\n" + stderr + "\nlang:" + language
+    text = build_text(code, stderr, language)
 
-    # Vectorize and predict
-    vec = vectorizer.transform([text])
-    pred = model.predict(vec)[0]
+    vec = embed(text).reshape(1, -1)
     proba = model.predict_proba(vec)[0]
-    confidence = float(max(proba))
+    idx = int(proba.argmax())
+    confidence = float(proba[idx])
+    category = str(model.classes_[idx])
+
+    if confidence < CONFIDENCE_THRESHOLD:
+        category = "Uncertain"
 
     return jsonify(
         {
-            "category": pred,
+            "category": category,
             "confidence": round(confidence, 4),
         }
     )
