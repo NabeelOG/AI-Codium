@@ -88,7 +88,7 @@ func GetClassrooms(c *gin.Context) {
 	userID := c.GetUint("userID")
 	userRole := c.GetString("role")
 
-	var classrooms []models.Classroom
+	classrooms := []models.Classroom{}
 	var query *gorm.DB
 
 	if userRole == "teacher" {

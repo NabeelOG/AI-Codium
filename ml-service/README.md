@@ -13,20 +13,23 @@ and runs on CPU.
 ## Quick Start
 
 ```bash
-# 1. Install dependencies (first run downloads CodeBERT, ~500MB)
+# 1. Install torch CPU-only (much smaller than CUDA build, ~180MB vs ~2.5GB)
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+# 2. Install remaining dependencies (first run also downloads CodeBERT, ~500MB)
 pip install -r requirements.txt
 
-# 2. Generate training data (synthetic, ~205 balanced examples)
+# 3. Generate training data (synthetic, ~205 balanced examples)
 python seed_data.py
 
-# 3. Train the classifier head
+# 4. Train the classifier head
 python train_model.py
 
-# 4. Start the service
+# 5. Start the service
 python app.py
 ```
 
-Service runs on `http://localhost:8081`.
+First run downloads ~500MB (torch + transformers + CodeBERT model).
 
 ## How it works
 

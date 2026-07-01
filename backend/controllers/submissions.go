@@ -293,7 +293,7 @@ func GetStudentSubmissions(c *gin.Context) {
 		return
 	}
 
-	var submissions []models.Submission
+	submissions := []models.Submission{}
 	if err := initializers.DB.Where("question_id = ? AND student_id = ?", questionID, studentID).
 		Order("created_at DESC").
 		Find(&submissions).Error; err != nil {
@@ -334,7 +334,7 @@ func GetClassroomMySubmissions(c *gin.Context) {
 		return
 	}
 
-	var submissions []models.Submission
+	submissions := []models.Submission{}
 	if err := initializers.DB.Where("classroom_id = ? AND student_id = ?", classroomID, studentID).
 		Find(&submissions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch submissions"})
@@ -371,7 +371,7 @@ func GetQuestionSubmissions(c *gin.Context) {
 		return
 	}
 
-	var submissions []models.Submission
+	submissions := []models.Submission{}
 	if err := initializers.DB.Where("question_id = ?", questionID).
 		Order("created_at DESC").
 		Find(&submissions).Error; err != nil {

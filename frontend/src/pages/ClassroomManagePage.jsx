@@ -1,17 +1,17 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-import { useAuth } from "../hooks/useAuth";
+// import { useAuth } from "../hooks/useAuth";
 import { getClassroom } from "../api/classroom";
 import { deleteQuestion, getClassroomQuestions } from "../api/question";
 import { getClassroomStudents } from "../api/enrollment";
 
 export default function ClassroomManagePage() {
   const { id } = useParams();
-  const { id: classroomId, qid } = useParams();
+  // const { id: classroomId, qid } = useParams();
 
   const navigate = useNavigate();
-  const { user } = useAuth();
+  // const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("questions");
   const [classroom, setClassroom] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -27,8 +27,8 @@ export default function ClassroomManagePage() {
         const studentsData = await getClassroomStudents(id);
 
         setClassroom(classroomData);
-        setQuestions(questionsData);
-        setStudents(studentsData);
+        setQuestions(Array.isArray(questionsData) ? questionsData : []);
+        setStudents(Array.isArray(studentsData) ? studentsData : []);
       } catch (error) {
         console.error("Failed to load classroom:", error);
       } finally {
@@ -393,14 +393,14 @@ export default function ClassroomManagePage() {
                 </div>
                 <div style={{ fontSize: "0.875rem" }}>
                   Share the invite link or code{" "}
-                  <strong>{classroom.inviteCode}</strong> with your students.
+                  <strong>{classroom.invite_code}</strong> with your students.
                 </div>
               </div>
             ) : (
               <div className="card" style={{ overflow: "hidden" }}>
                 {students.map((s, idx) => (
                   <div
-                    key={s.studentId || s.id}
+                    key={s.student_id || s.ID}
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -427,7 +427,7 @@ export default function ClassroomManagePage() {
                         flexShrink: 0,
                       }}
                     >
-                      {(s.StudentName || s.name)[0]?.toUpperCase()}
+                      {(s.student_name || s.name || "")[0]?.toUpperCase()}
                     </div>
                     <div>
                       <div
@@ -437,7 +437,7 @@ export default function ClassroomManagePage() {
                           color: "var(--color-on-surface)",
                         }}
                       >
-                        {s.StudentName}
+                        {s.student_name || s.StudentName || s.name}
                       </div>
                       <div
                         style={{
@@ -445,7 +445,10 @@ export default function ClassroomManagePage() {
                           color: "var(--color-on-surface-variant)",
                         }}
                       >
-                        Joined {new Date(s.created_at).toLocaleDateString()}
+                        Joined{" "}
+                        {new Date(
+                          s.CreatedAt || s.created_at,
+                        ).toLocaleDateString()}
                       </div>
                     </div>
                   </div>

@@ -113,7 +113,7 @@ func GetClassroomQuestions(c *gin.Context) {
 		return
 	}
 
-	var questions []models.Question
+	questions := []models.Question{}
 	if err := initializers.DB.Where("classroom_id = ?", classroomID).Find(&questions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch questions",

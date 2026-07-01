@@ -509,6 +509,34 @@ function StudentGroup({ group, isLast }) {
                       {feedback.status?.toUpperCase() || "NEEDS IMPROVEMENT"}
                     </span>
                   )}
+                  {sub.error_category && (
+                    <span
+                      className="badge"
+                      style={{
+                        marginLeft: "0.5rem",
+                        verticalAlign: "middle",
+                        background: sub.error_category === "Correct"
+                          ? "var(--color-console-success)"
+                          : sub.error_category === "Syntax Error"
+                            ? "var(--color-error)"
+                            : sub.error_category === "Runtime Error"
+                              ? "var(--color-tertiary-container)"
+                              : sub.error_category === "Logical Error"
+                                ? "var(--color-secondary-container)"
+                                : sub.error_category === "Inefficient Solution"
+                                  ? "var(--color-primary-container)"
+                                  : sub.error_category === "Uncertain"
+                                    ? "var(--color-outline)"
+                                    : "var(--color-surface-container)",
+                        color: sub.error_category === "Correct" || sub.error_category === "Syntax Error" || sub.error_category === "Uncertain"
+                          ? "#fff"
+                          : "var(--color-on-secondary-container)",
+                      }}
+                      title={`Confidence: ${(sub.error_confidence * 100).toFixed(0)}%`}
+                    >
+                      🤖 {sub.error_category} ({sub.error_confidence ? (sub.error_confidence * 100).toFixed(0) + "%" : "—"})
+                    </span>
+                  )}
                 </div>
 
                 {feedback && (

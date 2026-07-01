@@ -15,7 +15,7 @@
 # ==========================================================================
 
 # ---- 1. Backend .env -----------------------------------------------
-# Create ml-service/backend/.env with these 5 lines:
+# Create backend/.env with these 5 lines:
 cat > backend/.env << 'EOF'
 PORT=8080
 DB_URL=postgresql://postgres:password@localhost:5432/codeclass?sslmode=disable
@@ -85,8 +85,8 @@ cd frontend && npm install && npm run dev
 #  ---- 3. ML Service setup (Command Prompt / PowerShell) ------------
 #  cd ml-service
 #
-#  python -m venv venv
-#  .\venv\Scripts\activate
+#  python -m venv .venv
+#  .\.venv\Scripts\activate
 #
 #  REM Install torch CPU-only (much smaller download)
 #  pip install torch --index-url https://download.pytorch.org/whl/cpu
@@ -102,7 +102,7 @@ cd frontend && npm install && npm run dev
 #
 #  Terminal 1 — ML Service (port 8081):
 #    cd ml-service
-#    .\venv\Scripts\activate
+#    .\.venv\Scripts\activate
 #    python app.py
 #
 #  Terminal 2 — Backend (port 8080):

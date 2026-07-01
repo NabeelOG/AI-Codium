@@ -88,7 +88,7 @@ func GetClassroomStudents(c *gin.Context) {
 		return
 	}
 
-	var enrollments []models.Enrollment
+	enrollments := []models.Enrollment{}
 	if err := initializers.DB.Where("classroom_id = ?", classroomID).Find(&enrollments).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch students"})
 		return
