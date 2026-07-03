@@ -4,7 +4,7 @@
 #
 #  PREREQUISITES:
 #    • Go 1.26+    (brew install go  or  apt install golang)
-#    • Python 3.12+ (with venv —  apt install python3.12-venv)
+#    • Python 3.12 (with venv —  apt install python3.12-venv)
 #    • Node.js 22+  (fnm use 22  or  nvm use 22)
 #    • PostgreSQL   (docker run postgres  or  apt install postgresql)
 #    • DeepSeek API key → put in backend/.env  (DeepSeek sign‑up, free tier)
@@ -27,9 +27,12 @@ EOF
 # ---- 2. ML Service setup -------------------------------------------
 cd ml-service
 
-# Create venv & activate
-python3 -m venv .venv
-source .venv/bin/activate
+# Delete stale model from another OS (pickle is not cross-platform)
+rm -f model.joblib vectorizer.joblib
+
+# Create venv & activate (MUST use python3.12 — 3.14 has no numpy wheel)
+python3.12 -m venv venv
+source venv/bin/activate
 
 # Install torch CPU-only (MUCH smaller than CUDA — ~180MB vs 2.5GB)
 pip install torch --index-url https://download.pytorch.org/whl/cpu
@@ -39,11 +42,11 @@ pip install -r requirements.txt
 
 # Generate training data & train classifier
 python seed_data.py
-python train_model.py           # prints accuracy report — aim for 80%+
+python train_model.py           # prints accuracy report — aim for 70%+
 
 # ---- 3. Run everything (3 terminals) -------------------------------
 # Terminal 1 — ML Service (port 8081)
-cd ml-service && source .venv/bin/activate && python app.py
+cd ml-service && source venv/bin/activate && python app.py
 
 # Terminal 2 — Backend (port 8080)
 cd backend && go run main.go
@@ -53,29 +56,28 @@ cd frontend && npm install && npm run dev
 
 
 # ==========================================================================
-#  WINDOWS — First-time setup for your friend
+#  WINDOWS — First-time setup
 # ==========================================================================
 #
 #  PREREQUISITES (install BEFORE cloning):
-#    1. Python 3.12+   →  https://www.python.org/downloads/
+#    1. Python 3.12  →  https://www.python.org/downloads/release/python-3129/
+#       MUST be 3.12 — 3.13 works, 3.14+ has no numpy wheel yet.
 #       (tick "Add Python to PATH" during install)
-#    2. Node.js 22+     →  https://nodejs.org  (LTS)
-#    3. Go 1.26+        →  https://go.dev/dl/
-#    4. PostgreSQL 16+  →  https://www.postgresql.org/download/windows/
+#    2. Node.js 22+  →  https://nodejs.org  (LTS)
+#    3. Go 1.26+     →  https://go.dev/dl/
+#    4. PostgreSQL 16+ → https://www.postgresql.org/download/windows/
 #       During install: set password = "password", port = 5432
 #       After install: open pgAdmin → create database "codeclass"
-#    5. DeepSeek API key →  https://platform.deepseek.com  (free sign-up)
-#       Put key in backend\.env (step 1 below)
-#    6. Git              →  https://git-scm.com/download/win
+#    5. DeepSeek API key → https://platform.deepseek.com (free sign-up)
+#       Put key in backend\.env (step 2 below)
+#    6. Git           →  https://git-scm.com/download/win
 # ==========================================================================
 #
 #  ---- 1. Clone the project -----------------------------------------
 #  git clone <repo-url>
 #  cd Intel_Code_v2
 #
-#  ---- 2. Create backend\.env ---------------------------------------
-#  Create a new file  backend\.env  with these lines (use Notepad):
-#
+#  ---- 2. Create backend\.env (use Notepad) -------------------------
 #    PORT=8080
 #    DB_URL=postgresql://postgres:password@localhost:5432/codeclass?sslmode=disable
 #    JWT_SECRET=any_random_string_here
@@ -85,16 +87,20 @@ cd frontend && npm install && npm run dev
 #  ---- 3. ML Service setup (Command Prompt / PowerShell) ------------
 #  cd ml-service
 #
-#  python -m venv .venv
-#  .\.venv\Scripts\activate
+#  REM Delete any stale model from another OS (pickle is not cross-platform)
+#  del model.joblib vectorizer.joblib 2>nul
 #
-#  REM Install torch CPU-only (much smaller download)
+#  python -m venv venv
+#  venv\Scripts\activate
+#
+#  REM Install torch CPU-only (~180MB, vs 2.5GB for CUDA)
 #  pip install torch --index-url https://download.pytorch.org/whl/cpu
 #
-#  REM Install remaining dependencies (first run downloads CodeBERT ~500MB)
+#  REM Install remaining deps. If sklearn fails, try: pip install scikit-learn==1.5.2
+#  REM (scikit-learn 1.6+ has no Windows wheel, needs C++ Build Tools)
 #  pip install -r requirements.txt
 #
-#  REM Generate training data & train
+#  REM Generate training data & train (first run downloads CodeBERT ~500MB)
 #  python seed_data.py
 #  python train_model.py
 #
@@ -102,7 +108,7 @@ cd frontend && npm install && npm run dev
 #
 #  Terminal 1 — ML Service (port 8081):
 #    cd ml-service
-#    .\.venv\Scripts\activate
+#    venv\Scripts\activate
 #    python app.py
 #
 #  Terminal 2 — Backend (port 8080):
@@ -119,10 +125,16 @@ cd frontend && npm install && npm run dev
 #  Register a teacher account, then a student account.
 #
 #  ---- Troubleshooting ----------------------------------------------
-#  • "pip not found"         → make sure Python is in PATH, try "py -m pip"
-#  • "go not found"          → reinstall Go, restart terminal
-#  • Frontend can't connect  → make sure both backend (8080) AND ML (8081)
-#                              are running
-#  • "connect to PostgreSQL" → check PostgreSQL is running (pgAdmin / Services)
-#  • torch huge download     → you missed step 3 — MUST use CPU index
-#  • CodeBERT 500MB download → happens once on first train_model.py run
+#  • Python 3.14 installed?    → numpy has no wheel for 3.14 yet.
+#                                 Install Python 3.12 instead.
+#  • "pip not found"           → make sure Python is in PATH, try "py -m pip"
+#  • "go not found"            → reinstall Go, restart terminal
+#  • sklearn build fails       → pip install scikit-learn==1.5.2
+#    (missing compiler)          (1.6+ needs Visual Studio Build Tools)
+#  • "Can't get attribute"     → delete model.joblib and retrain locally.
+#    in app.py                   pickle files are not cross-platform.
+#  • Frontend can't connect    → make sure both backend (8080) AND ML (8081)
+#                                 are running
+#  • "connect to PostgreSQL"   → check PostgreSQL is running (pgAdmin / Services)
+#  • torch huge download       → you missed the --index-url flag in step 3
+#  • CodeBERT 500MB download   → happens once on first train_model.py run

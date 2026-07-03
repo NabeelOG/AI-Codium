@@ -11,9 +11,8 @@ misleading label.
 import os
 
 import joblib
-from flask import Flask, jsonify, request
-
 from embed import embed
+from flask import Flask, jsonify, request
 
 BASE_DIR = os.path.dirname(__file__)
 MODEL_PATH = os.path.join(BASE_DIR, "model.joblib")
